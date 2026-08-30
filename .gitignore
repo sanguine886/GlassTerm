@@ -17,3 +17,4 @@ maidkit_ref/
 # Local scratch
 *.orig
 *.rej
+App/Info.plist
