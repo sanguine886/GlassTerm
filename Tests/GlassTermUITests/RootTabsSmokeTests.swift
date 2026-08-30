@@ -1,5 +1,6 @@
 import XCTest
 
+@MainActor
 final class RootTabsSmokeTests: XCTestCase {
     /// Spec §6.5.3 smoke path (P0 scope): the four root tabs all switch screens.
     func testAllFourTabsSwitchScreens() {

@@ -15,3 +15,11 @@ file_length:
   error: 500
 force_cast: error
 force_try: error
+
+# Align with swiftformat's trailingCommas default: multiline lists carry trailing commas.
+trailing_comma:
+  mandatory_comma: true
+
+# Design-token shorthand (xs/sm/md/lg/xl) is a deliberate two-letter vocabulary.
+identifier_name:
+  min_length: 2
