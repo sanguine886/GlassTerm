@@ -49,6 +49,9 @@ targets:
     platform: iOS
     sources:
       - Tests/GlassTermTests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
     dependencies:
       - target: GlassTerm
   GlassTermUITests:
@@ -56,6 +59,9 @@ targets:
     platform: iOS
     sources:
       - Tests/GlassTermUITests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
     dependencies:
       - target: GlassTerm
 schemes:
