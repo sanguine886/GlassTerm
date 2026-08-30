@@ -1,0 +1,3 @@
+--exclude maidkit_ref,.build,build,DerivedData
+--indent 4
+--swiftversion 6.0
