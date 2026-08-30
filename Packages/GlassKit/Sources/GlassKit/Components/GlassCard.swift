@@ -14,6 +14,7 @@ public struct GlassCard<Content: View>: View {
 
     public var body: some View {
         content
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(GlassSpacing.lg)
             .glassEffect(
                 .regular,
