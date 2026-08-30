@@ -5,9 +5,9 @@ let package = Package(
     name: "GlassKit",
     platforms: [.iOS("26.0")],
     products: [
-        .library(name: "GlassKit", targets: ["GlassKit"])
+        .library(name: "GlassKit", targets: ["GlassKit"]),
     ],
     targets: [
-        .target(name: "GlassKit", path: "Sources/GlassKit")
+        .target(name: "GlassKit", path: "Sources/GlassKit"),
     ]
 )

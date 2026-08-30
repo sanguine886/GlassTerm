@@ -12,7 +12,7 @@ final class RootTabsSmokeTests: XCTestCase {
             "screen.servers.heading",
             "screen.terminal.heading",
             "screen.assistant.heading",
-            "screen.settings.heading"
+            "screen.settings.heading",
         ]
 
         for (index, heading) in headings.enumerated() {

@@ -5,9 +5,9 @@ let package = Package(
     name: "TerminalKit",
     platforms: [.iOS("26.0")],
     products: [
-        .library(name: "TerminalKit", targets: ["TerminalKit"])
+        .library(name: "TerminalKit", targets: ["TerminalKit"]),
     ],
     targets: [
-        .target(name: "TerminalKit", path: "Sources/TerminalKit")
+        .target(name: "TerminalKit", path: "Sources/TerminalKit"),
     ]
 )
