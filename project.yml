@@ -46,6 +46,7 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        UIRequiresFullScreen: true
         ITSAppUsesNonExemptEncryption: false
   GlassTermTests:
     type: bundle.unit-test
