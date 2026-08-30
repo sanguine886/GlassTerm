@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -78,3 +79,48 @@ jobs:
           name: xcresult
           path: build/DerivedData/Logs/Test
           retention-days: 7
+
+  ipa:
+    name: Unsigned IPA (device build)
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install xcodegen
+        run: |
+          set -euo pipefail
+          command -v xcodegen >/dev/null 2>&1 || brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build unsigned device .app
+        run: |
+          set -euo pipefail
+          xcodebuild build \
+            -project GlassTerm.xcodeproj \
+            -scheme GlassTerm \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/ipa \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            2>&1 | xcbeautify --quiet
+
+      - name: Package unsigned ipa
+        run: |
+          set -euo pipefail
+          mkdir -p build/Payload
+          ditto "build/ipa/Build/Products/Release-iphoneos/GlassTerm.app" "build/Payload/GlassTerm.app"
+          cd build
+          zip -qry "GlassTerm-${GITHUB_SHA::7}-unsigned.ipa" Payload
+          cd ..
+          ls -lh build/*.ipa
+
+      - name: Upload ipa artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GlassTerm-unsigned-ipa
+          path: build/*.ipa
+          retention-days: 14
