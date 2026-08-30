@@ -42,7 +42,12 @@ jobs:
         run: |
           set -euo pipefail
           if ! xcrun simctl list devices available | grep -q "iPhone 16 Pro ("; then
-            runtime_id=$(xcrun simctl list runtimes | awk '/ iOS /{print $NF}' | tail -1)
+            runtime_id=$(xcrun simctl list runtimes | awk '/^iOS /{print $NF}' | tail -1)
+            if [ -z "${runtime_id}" ]; then
+              echo "No iOS simulator runtime found. Runtimes installed:"
+              xcrun simctl list runtimes
+              exit 1
+            fi
             echo "Creating iPhone 16 Pro on runtime ${runtime_id}"
             xcrun simctl create "iPhone 16 Pro" \
               "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro" \
