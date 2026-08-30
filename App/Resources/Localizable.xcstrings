@@ -1,0 +1,126 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "approval.approve" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Approve" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "批准" } }
+      }
+    },
+    "approval.reject" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reject" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "拒绝" } }
+      }
+    },
+    "approval.sample.impact" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Read-only: check disk usage of the root volume." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "只读操作：查看根分区磁盘占用。" } }
+      }
+    },
+    "approval.sample.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Agent proposal" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Agent 提案" } }
+      }
+    },
+    "placeholder.assistant.body" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bring-your-own provider chat (P4) and the approval-gated agent (P5) land in later phases." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "P4 交付自定义提供商对话，P5 交付审批制 Agent。" } }
+      }
+    },
+    "placeholder.assistant.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "AI Assistant" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "AI 助手" } }
+      }
+    },
+    "placeholder.servers.body" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Host cards, groups, latency and one-tap connect arrive in P1." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "P1 交付：主机卡片、分组、在线状态与延迟、一键连接。" } }
+      }
+    },
+    "placeholder.servers.hint" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Liquid Glass card scaffold — visual acceptance happens on device." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "玻璃卡片骨架——视觉效果以真机验收为准。" } }
+      }
+    },
+    "placeholder.servers.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Servers" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务器" } }
+      }
+    },
+    "placeholder.settings.body" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "AI providers, approval policy, appearance and security land from P4 onward." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "AI 提供商、审批策略、外观与安全设置自 P4 起交付。" } }
+      }
+    },
+    "placeholder.settings.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设置" } }
+      }
+    },
+    "placeholder.terminal.body" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "SwiftTerm sessions with the extended key bar arrive in P2." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "P2 交付：SwiftTerm 会话与扩展键盘条。" } }
+      }
+    },
+    "placeholder.terminal.hint" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The terminal area is never covered by glass (spec §5.1 red line)." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "终端区域永不被玻璃覆盖（规范 5.1 红线）。" } }
+      }
+    },
+    "placeholder.terminal.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Terminal" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "终端" } }
+      }
+    },
+    "sample.keyboard" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Keys" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "键盘" } }
+      }
+    },
+    "sample.theme" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Theme" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "主题" } }
+      }
+    },
+    "tab.assistant" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Assistant" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "AI 助手" } }
+      }
+    },
+    "tab.servers" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Servers" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务器" } }
+      }
+    },
+    "tab.settings" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设置" } }
+      }
+    },
+    "tab.terminal" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Terminal" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "终端" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

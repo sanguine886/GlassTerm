@@ -1,0 +1,17 @@
+excluded:
+  - maidkit_ref
+  - .build
+  - build
+  - DerivedData
+
+line_length:
+  warning: 120
+  error: 160
+type_body_length:
+  warning: 300
+  error: 400
+file_length:
+  warning: 300
+  error: 500
+force_cast: error
+force_try: error

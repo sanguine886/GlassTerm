@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    name: Lint & Test (iOS 26 Simulator)
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tooling
+        run: |
+          set -euo pipefail
+          for tool in xcodegen swiftlint swiftformat; do
+            if ! command -v "$tool" >/dev/null 2>&1; then
+              brew install "$tool"
+            fi
+          done
+
+      - name: Lint
+        run: |
+          set -euo pipefail
+          swiftformat --lint .
+          swiftlint --quiet
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Ensure iPhone 16 Pro simulator exists
+        run: |
+          set -euo pipefail
+          if ! xcrun simctl list devices available | grep -q "iPhone 16 Pro ("; then
+            runtime_id=$(xcrun simctl list runtimes | awk '/ iOS /{print $NF}' | tail -1)
+            echo "Creating iPhone 16 Pro on runtime ${runtime_id}"
+            xcrun simctl create "iPhone 16 Pro" \
+              "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro" \
+              "${runtime_id}"
+          fi
+
+      - name: Build & Test
+        run: |
+          set -euo pipefail
+          xcodebuild test \
+            -project GlassTerm.xcodeproj \
+            -scheme GlassTerm \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            -enableCodeCoverage YES \
+            -derivedDataPath build/DerivedData \
+            2>&1 | xcbeautify --quiet
+
+      - name: Coverage report
+        if: always()
+        run: |
+          set -euo pipefail
+          xcrun xccov view --report build/DerivedData/Logs/Test/*.xcresult || true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcresult
+          path: build/DerivedData/Logs/Test
+          retention-days: 7

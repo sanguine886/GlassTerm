@@ -1,0 +1,75 @@
+name: GlassTerm
+options:
+  bundleIdPrefix: com.glazeterm
+  deploymentTarget:
+    iOS: "26.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    TARGETED_DEVICE_FAMILY: "1"
+packages:
+  GlassKit:
+    path: Packages/GlassKit
+  CoreSSH:
+    path: Packages/CoreSSH
+  TerminalKit:
+    path: Packages/TerminalKit
+  AIAgent:
+    path: Packages/AIAgent
+  Persistence:
+    path: Packages/Persistence
+targets:
+  GlassTerm:
+    type: application
+    platform: iOS
+    sources:
+      - App
+    dependencies:
+      - package: GlassKit
+      - package: CoreSSH
+      - package: TerminalKit
+      - package: AIAgent
+      - package: Persistence
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: GlassTerm
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations:
+          - en
+          - zh-Hans
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        ITSAppUsesNonExemptEncryption: false
+  GlassTermTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - Tests/GlassTermTests
+    dependencies:
+      - target: GlassTerm
+  GlassTermUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - Tests/GlassTermUITests
+    dependencies:
+      - target: GlassTerm
+schemes:
+  GlassTerm:
+    build:
+      targets:
+        GlassTerm: all
+        GlassTermTests: [test]
+        GlassTermUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+      targets:
+        - GlassTermTests
+        - GlassTermUITests
