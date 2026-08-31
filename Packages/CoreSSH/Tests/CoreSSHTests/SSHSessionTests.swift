@@ -198,7 +198,9 @@ final class SSHSessionTests: XCTestCase {
 
         let deadline = Date().addingTimeInterval(5)
         while Date() < deadline {
-            if state.attempts >= 2, await session.state == .connected { break }
+            if state.attempts >= 2, await session.state == .connected {
+                break
+            }
             try await Task.sleep(for: .milliseconds(20))
         }
         let postReconnect = await session.state
