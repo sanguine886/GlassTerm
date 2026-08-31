@@ -57,7 +57,7 @@ struct ServersView: View {
                 }
                 .navigationDestination(for: UUID.self) { hostID in
                     if let record = manager.record(id: hostID) {
-                        ExecDebugView(record: record)
+                        TerminalScreenView(record: record)
                     }
                 }
                 .sheet(isPresented: $showAdd) {

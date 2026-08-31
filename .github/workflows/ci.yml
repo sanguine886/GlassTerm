@@ -44,6 +44,11 @@ jobs:
           set -euo pipefail
           swift test --package-path Packages/CoreSSH --enable-code-coverage 2>&1
 
+      - name: TerminalKit logic tests (swift test)
+        run: |
+          set -euo pipefail
+          swift test --package-path Packages/TerminalKit 2>&1
+
       - name: Coverage gate — CoreSSH ≥ 60% (ADR-0005)
         run: |
           set -euo pipefail
