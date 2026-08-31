@@ -285,10 +285,7 @@ final class SSHSessionTests: XCTestCase {
 
     // MARK: - mapHostKeyError translation (UI-facing TOFU errors)
 
-    private func runValidation(
-        on validator: TOFUHostKeyValidator,
-        against store: KnownHostsStore
-    ) throws {
+    private func runValidation(on validator: TOFUHostKeyValidator) throws {
         let key = try NIOSSHPublicKey(openSSHPublicKey: FakeState.fixtureOpenSSHPublicKey)
         let promise = state.eventLoop.makePromise(of: Void.self)
         validator.validateHostKey(hostKey: key, validationCompletePromise: promise)
@@ -297,7 +294,7 @@ final class SSHSessionTests: XCTestCase {
     func testMapHostKeyErrorNewHost() throws {
         let unpinned = KnownHostsStore(storeURL: nil)
         let validator = TOFUHostKeyValidator(knownHosts: unpinned, hostIdentifier: "host:22")
-        try runValidation(on: validator, against: unpinned)
+        try runValidation(on: validator)
 
         let mapped = SSHSession.mapHostKeyError(
             SSHError.hostKeyVerificationDeclined,
@@ -313,7 +310,7 @@ final class SSHSessionTests: XCTestCase {
         let impostor = HostKeyFingerprint(algorithm: "ssh-ed25519", sha256: "SHA256:tt45JPYHSqQ1kvgOPMu5tO7lQT+ccsZZS0Z7AitT7pM")
         store.trust(hostIdentifier: "host:22", fingerprint: impostor)
         let validator = TOFUHostKeyValidator(knownHosts: store, hostIdentifier: "host:22")
-        try runValidation(on: validator, against: store)
+        try runValidation(on: validator)
 
         let mapped = SSHSession.mapHostKeyError(
             SSHError.hostKeyVerificationDeclined,
@@ -328,7 +325,7 @@ final class SSHSessionTests: XCTestCase {
 
     func testMapHostKeyErrorTrustedHostBecomesConnectionFailure() throws {
         let validator = TOFUHostKeyValidator(knownHosts: store, hostIdentifier: "host:22")
-        try runValidation(on: validator, against: store)
+        try runValidation(on: validator)
 
         let mapped = SSHSession.mapHostKeyError(
             SSHError.hostKeyVerificationDeclined,
