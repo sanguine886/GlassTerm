@@ -30,7 +30,10 @@ final class HostKeyFingerprintTests: XCTestCase {
 
     func testExtractsECDSAP256Fingerprint() throws {
         let key = try NIOSSHPublicKey(
-            openSSHPublicKey: "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBELiZJAMCEipRVxsPUcv7KHuMudxDLfLuCDAuJuVAHEgB50uzOuBWJtsKWK4dyCHge3qRtEa/N047Gl29t7cnls= glassterm-fixture-ecdsa"
+            openSSHPublicKey: "ecdsa-sha2-nistp256 "
+                + "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBELiZJAMCEip"
+                + "RVxsPUcv7KHuMudxDLfLuCDAuJuVAHEgB50uzOuBWJtsKWK4dyCHge3qRtEa/"
+                + "N047Gl29t7cnls= glassterm-fixture-ecdsa"
         )
 
         let fingerprint = try HostKeyFingerprint.make(from: key)

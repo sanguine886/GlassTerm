@@ -10,10 +10,10 @@ let package = Package(
     dependencies: [
         // Exact pins per spec §6.4.3 (ADR-0002). The NIOSSH fork and NIO version
         // ranges match what Citadel 0.12.1 itself requires.
-        .package(url: "https://github.com/orlandos-nl/Citadel.git", exactVersion: "0.12.1"),
-        .package(url: "https://github.com/Wellz26/swift-nio-ssh.git", exactVersion: "0.3.4"),
-        .package(url: "https://github.com/apple/swift-nio.git", exactVersion: "2.81.0"),
-        .package(url: "https://github.com/apple/swift-crypto.git", exactVersion: "3.12.3"),
+        .package(url: "https://github.com/orlandos-nl/Citadel.git", exact: "0.12.1"),
+        .package(url: "https://github.com/Wellz26/swift-nio-ssh.git", exact: "0.3.4"),
+        .package(url: "https://github.com/apple/swift-nio.git", exact: "2.81.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", exact: "3.12.3"),
     ],
     targets: [
         .target(
