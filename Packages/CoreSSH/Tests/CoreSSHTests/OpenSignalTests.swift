@@ -19,7 +19,7 @@ final class OpenSignalTests: XCTestCase {
         try await waiter.value
     }
 
-    func testFailThrowsToPendingWaiter() async {
+    func testFailThrowsToPendingWaiter() async throws {
         let signal = OpenSignal()
         let waiter = Task { try await signal.wait() }
         try await Task.sleep(for: .milliseconds(20))
@@ -30,6 +30,8 @@ final class OpenSignalTests: XCTestCase {
             XCTFail("Expected wait() to throw")
         } catch let error as SSHError {
             XCTAssertEqual(error, .connectionFailed("boom"))
+        } catch {
+            XCTFail("Unexpected error: \(error)")
         }
     }
 
