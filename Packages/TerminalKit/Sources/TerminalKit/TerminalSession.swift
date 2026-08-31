@@ -28,13 +28,13 @@ import Foundation
             fontSize: Int = 12,
             theme: TerminalTheme = .dark
         ) {
-            self.stdin = shell.stdin
+            stdin = shell.stdin
             self.fontName = fontName
             self.fontSize = fontSize
             self.theme = theme
 
-            // Scrollback ≥ 10000 lines (spec §4.3).
-            let options = TerminalOptions(scrollback: 10_000)
+            // Scrollback >= 10000 lines (spec §4.3).
+            let options = TerminalOptions(scrollback: 10000)
             terminalView = TerminalView(frame: .zero, options: options)
             terminalView.terminalDelegate = self
             applyStyle()

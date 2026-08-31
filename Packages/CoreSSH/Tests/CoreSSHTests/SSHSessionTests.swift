@@ -53,6 +53,10 @@ final class FakeTransport: SSHTransport, @unchecked Sendable {
         throw SSHError.sessionNotConnected
     }
 
+    func openSFTP() async throws -> any SFTPService {
+        throw SSHError.sessionNotConnected
+    }
+
     func close() async {
         opened = false
     }
