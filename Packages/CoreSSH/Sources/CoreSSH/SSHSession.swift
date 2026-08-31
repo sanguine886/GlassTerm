@@ -234,7 +234,7 @@ public actor SSHSession {
             return .connectionFailed(error.localizedDescription)
         case .newHost:
             return .hostKeyUnknown(fingerprint: presented)
-        case .changed(let pinned):
+        case let .():
             return .hostKeyChanged(pinned: pinned, presented: presented)
         }
     }

@@ -23,7 +23,7 @@ final class HostRecordTests: XCTestCase {
         XCTAssertNil(try store.record(id: record.id))
     }
 
-    func testSecretValueNeverStoredInAnyRecordProperty() throws {
+    func testSecretValueNeverStoredInAnyRecordProperty() {
         let secret = "TOP-SECRET-PASSWORD-9781"
         let record = HostRecord(
             name: "h", hostname: "example.com", port: 22, username: "deploy",

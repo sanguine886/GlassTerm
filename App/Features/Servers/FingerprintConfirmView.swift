@@ -79,9 +79,9 @@ struct FingerprintConfirmView: View {
 
     private var presented: HostKeyFingerprint {
         switch kind {
-        case .new(let fingerprint):
+        case let .new():
             fingerprint
-        case .changed(_, let changed):
+        case let .changed(_, ):
             changed
         }
     }

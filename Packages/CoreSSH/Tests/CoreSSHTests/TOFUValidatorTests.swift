@@ -62,9 +62,9 @@ final class TOFUValidatorTests: XCTestCase {
         wait(for: [expectation], timeout: 5)
 
         switch outcome {
-        case .success:
+        case let .success:
             return (true, nil)
-        case .failure(let error):
+        case let .failure(error):
             return (false, error)
         case nil:
             return (false, nil)

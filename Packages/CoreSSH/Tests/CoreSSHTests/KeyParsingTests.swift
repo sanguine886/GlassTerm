@@ -3,8 +3,6 @@ import CoreSSH
 import Crypto
 import XCTest
 
-@testable import CoreSSH
-
 /// OpenSSH private-key parsing for key auth (ED25519 / RSA, with passphrase).
 final class KeyParsingTests: XCTestCase {
     private let ed25519PEM = """

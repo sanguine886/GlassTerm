@@ -14,7 +14,7 @@ struct GlassTermApp: App {
             // silently data-less app.
             preconditionFailure("SwiftData container unavailable")
         }
-        container = built
+container = built
 
         let knownHosts = (try? KnownHostsStore()) ?? KnownHostsStore(storeURL: nil)
         hostManager = HostManager(

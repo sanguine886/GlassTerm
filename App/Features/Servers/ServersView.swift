@@ -166,12 +166,12 @@ struct ServersView: View {
             path.append(record.id)
         } catch let error as SSHError {
             switch error {
-            case .hostKeyUnknown(let fingerprint):
+            case let .hostKeyUnknown():
                 flow = ConnectFlow(
                     record: record, session: session, config: config,
                     kind: .new(fingerprint)
                 )
-            case .hostKeyChanged(let pinned, let presented):
+            case let .hostKeyChanged(, ):
                 flow = ConnectFlow(
                     record: record, session: session, config: config,
                     kind: .changed(pinned: pinned, presented: presented)
@@ -191,9 +191,9 @@ struct ServersView: View {
         }
         Task {
             switch flow.kind {
-            case .new(let fingerprint):
+            case let .new():
                 manager.knownHosts.trust(hostIdentifier: flow.config.hostIdentifier, fingerprint: fingerprint)
-            case .changed(_, let changed):
+            case let .changed(_, ):
                 manager.knownHosts.repin(hostIdentifier: flow.config.hostIdentifier, fingerprint: changed)
             }
 

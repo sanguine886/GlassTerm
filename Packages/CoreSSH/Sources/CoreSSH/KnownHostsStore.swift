@@ -43,7 +43,7 @@ public final class KnownHostsStore: @unchecked Sendable {
     /// everything in memory.
     public init(storeURL: URL?) {
         self.fileURL = storeURL
-        self.entries = [:]
+        entries = [:]
         guard let fileURL, let data = try? Data(contentsOf: fileURL) else { return }
         if let decoded = try? JSONDecoder().decode([KnownHostEntry].self, from: data) {
             for entry in decoded {
