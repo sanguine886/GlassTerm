@@ -43,6 +43,9 @@ final class FakeTransport: SSHTransport, @unchecked Sendable {
 
     func run(_ command: String) async throws -> String {
         guard opened else { throw SSHError.sessionNotConnected }
+        // A 1ms pause keeps CommandResult.durationSeconds > 0 (two Date()
+        // reads in the same tick would otherwise round to 0.0).
+        try await Task.sleep(for: .milliseconds(1))
         return "ok:\(command)"
     }
 
