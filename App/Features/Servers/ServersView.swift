@@ -30,6 +30,7 @@ struct ServersView: View {
     @State private var path: [UUID] = []
     @State private var errorMessage: String?
     @State private var connectingHostID: UUID?
+    @State private var sftpHost: HostRecord?
 
     /// `@Query`'s macro-generated private initializer suppresses the default
     /// `init()`, so it is declared explicitly (SwiftData stores + environment
@@ -69,6 +70,11 @@ struct ServersView: View {
                 .sheet(item: $flow) { pending in
                     FingerprintConfirmView(kind: pending.kind) { decision in
                         handleFingerprintDecision(decision, flow: pending)
+                    }
+                }
+                .sheet(item: $sftpHost) { host in
+                    NavigationStack {
+                        SFTPBrowserView(record: host)
                     }
                 }
                 .alert(
@@ -148,6 +154,7 @@ struct ServersView: View {
         }
         .contextMenu {
             Button("common.edit") { editingHost = record }
+            Button("sftp.open", systemImage: "folder") { sftpHost = record }
             Button("common.delete", role: .destructive) {
                 try? manager.delete(record)
             }
