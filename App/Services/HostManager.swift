@@ -76,6 +76,11 @@ final class HostManager {
         (try? hostStore.record(id: id)) ?? nil
     }
 
+    /// All hosts, for pickers (snippet runner).
+    var allHosts: [HostRecord] {
+        (try? hostStore.all()) ?? []
+    }
+
     func markConnected(_ record: HostRecord) {
         try? hostStore.markConnected(id: record.id)
     }

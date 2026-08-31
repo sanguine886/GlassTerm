@@ -7,6 +7,7 @@ import SwiftUI
 struct GlassTermApp: App {
     private let container: ModelContainer
     private let hostManager: HostManager
+    private let snippetManager: SnippetManager
 
     init() {
         guard let built = (try? HostStore.makeContainer()) ?? (try? HostStore.makeContainer(inMemory: true)) else {
@@ -23,12 +24,14 @@ struct GlassTermApp: App {
             secrets: KeychainStore(),
             knownHosts: knownHosts
         )
+        snippetManager = SnippetManager(store: SnippetStore(container: built))
     }
 
     var body: some Scene {
         WindowGroup {
             RootTabView()
                 .environment(hostManager)
+                .environment(snippetManager)
                 .modelContainer(container)
         }
     }
