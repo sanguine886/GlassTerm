@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "CoreSSH",
-    platforms: [.iOS("26.0"), .macOS(.v14)],
+    platforms: [.iOS("26.0"), .macOS(.v15)],
     products: [
         .library(name: "CoreSSH", targets: ["CoreSSH"]),
     ],

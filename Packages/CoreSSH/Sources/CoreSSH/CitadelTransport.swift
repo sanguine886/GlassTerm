@@ -221,7 +221,9 @@ final class OpenSignal: @unchecked Sendable {
     var settleIfFirst: Bool {
         lock.withLock {
             let first = !settled
-            if first { settled = true }
+            if first {
+                settled = true
+            }
             return first
         }
     }
