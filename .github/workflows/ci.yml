@@ -107,14 +107,20 @@ jobs:
           python3 - <<'PY'
           import json, sys
           data = json.load(open('/tmp/app_cov.json'))
-          targets = data['coverage']['targets']
+          if isinstance(data, dict):
+              targets = data.get('coverage', {}).get('targets') or data.get('targets') or []
+          else:
+              targets = data
           print('Targets:', [(t['name'], round(t['lineCoverage'], 2)) for t in targets])
-          persistence = [t for t in targets if t['name'].startswith('Persistence')]
-          if not persistence:
-              print('Persistence target missing from coverage report'); sys.exit(1)
-          t = persistence[0]
-          ratio = t['lineCoverage']
-          print(f"Persistence line coverage: {ratio:.1%} ({t['coveredLines']}/{t['executableLines']})")
+          # SPM packages are compiled into the GlassTerm.app binary, so
+          # Persistence coverage is the sum of its sources under any target.
+          files = [f for t in targets for f in t.get('files', []) if '/Packages/Persistence/' in f.get('path', '')]
+          if not files:
+              print('No Persistence sources found in coverage report'); sys.exit(1)
+          covered = sum(f['coveredLines'] for f in files)
+          executable = sum(f['executableLines'] for f in files)
+          ratio = covered / executable if executable else 0
+          print(f"Persistence line coverage: {ratio:.1%} ({covered}/{executable})")
           sys.exit(0 if ratio >= 0.60 else 1)
           PY
 
