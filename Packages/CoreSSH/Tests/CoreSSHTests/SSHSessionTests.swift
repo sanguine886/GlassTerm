@@ -188,13 +188,16 @@ final class SSHSessionTests: XCTestCase {
         let session = makeSession()
         try await session.connect(config: makeConfig(), knownHosts: store)
 
-        // Simulate a network drop; the current transport's onDrop fires.
+        // Simulate a network drop; the current transport's onDrop fires. The
+        // drop handler runs on the session actor, so wait for the reconnect
+        // attempt counter to advance instead of the state (which may briefly
+        // still read `.connected` before the handler is scheduled).
         let live = await session.activeTransport
         let fake = try XCTUnwrap(live as? FakeTransport)
         fake.simulateDrop()
 
         let deadline = Date().addingTimeInterval(5)
-        while await session.state != .connected, Date() < deadline {
+        while state.attempts < 2, Date() < deadline {
             try await Task.sleep(for: .milliseconds(20))
         }
         let postReconnect = await session.state
@@ -203,8 +206,11 @@ final class SSHSessionTests: XCTestCase {
     }
 
     func testReconnectGivesUpAfterMaxAttempts() async throws {
-        state.failFirstAttempts = Int.max // every open fails at the network step
         let session = makeSession()
+        // makeSession resets the fake state; arm the "every open fails" switch
+        // AFTER it so the initial connect still succeeds and only the
+        // reconnect loop exhausts its attempts.
+        state.failFirstAttempts = Int.max
         try await session.connect(config: makeConfig(), knownHosts: store)
 
         let live = await session.activeTransport

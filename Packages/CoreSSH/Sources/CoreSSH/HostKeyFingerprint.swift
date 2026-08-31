@@ -30,9 +30,11 @@ public struct HostKeyFingerprint: Equatable, Hashable, Codable, Sendable {
         case let .ed25519(raw):
             appendSSHString(Array("ssh-ed25519".utf8), to: &wire)
             appendSSHString(Array(raw), to: &wire)
-        case let .ecdsa(algorithm, curve, point):
+        case let .ecdsa(algorithm, _, point):
+            // RFC 5656 §3.1: the blob is `string(algorithm) + string(Q)`.
+            // The curve name ("nistp256"...) is implied by the algorithm and
+            // must NOT be serialized — ssh-keygen fingerprints exclude it.
             appendSSHString(Array(algorithm.utf8), to: &wire)
-            appendSSHString(Array(curve.utf8), to: &wire)
             appendSSHString(Array(point), to: &wire)
         }
 
