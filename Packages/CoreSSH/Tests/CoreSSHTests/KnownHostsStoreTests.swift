@@ -11,7 +11,7 @@ final class KnownHostsStoreTests: XCTestCase {
         storeURL = directory.appendingPathComponent("known-hosts.json")
     }
 
-    override func tearDownWithError() {
+    override func tearDownWithError() throws {
         try? FileManager.default.removeItem(at: storeURL.deletingLastPathComponent())
     }
 

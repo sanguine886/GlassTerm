@@ -1,4 +1,5 @@
 import CoreSSH
+import NIO
 import NIOCore
 import NIOSSH
 import XCTest

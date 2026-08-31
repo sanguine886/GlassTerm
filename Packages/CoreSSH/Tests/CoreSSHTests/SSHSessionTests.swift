@@ -1,4 +1,3 @@
-
 @testable import CoreSSH
 import NIO
 import NIOCore
@@ -64,7 +63,7 @@ final class CallbackBoxForTests: @unchecked Sendable {
     private let lock = NSLock()
     private var callback: (@Sendable () -> Void)?
 
-    func set(_ callback: @Sendable () -> Void) {
+    func set(_ callback: @escaping @Sendable () -> Void) {
         lock.lock()
         self.callback = callback
         lock.unlock()
@@ -138,14 +137,16 @@ final class SSHSessionTests: XCTestCase {
         let session = makeSession()
 
         try await session.connect(config: makeConfig(), knownHosts: store)
-        await XCTAssertEqual(session.state, .connected)
+        let connectedState = await session.state
+        XCTAssertEqual(connectedState, .connected)
 
         let result = try await session.run("uname -a")
         XCTAssertEqual(result.output, "ok:uname -a")
         XCTAssertGreaterThan(result.durationSeconds, 0)
 
         await session.disconnect()
-        await XCTAssertEqual(session.state, .closed)
+        let finalState = await session.state
+        XCTAssertEqual(finalState, .closed)
     }
 
     func testUnpinnedHostSurfacesTOFUError() async throws {
@@ -162,7 +163,8 @@ final class SSHSessionTests: XCTestCase {
             XCTAssertEqual(fingerprint, FakeState.fixtureFingerprint)
         }
         // The connection attempt failed, so the session reports failure state.
-        await XCTAssertEqual(session.state, .failed(.hostKeyUnknown(fingerprint: FakeState.fixtureFingerprint)))
+        let failedState = await session.state
+        XCTAssertEqual(failedState, .failed(.hostKeyUnknown(fingerprint: FakeState.fixtureFingerprint)))
     }
 
     func testChangedHostKeyIsBlocked() async throws {
@@ -195,7 +197,8 @@ final class SSHSessionTests: XCTestCase {
         while await session.state != .connected, Date() < deadline {
             try await Task.sleep(for: .milliseconds(20))
         }
-        await XCTAssertEqual(session.state, .connected)
+        let postReconnect = await session.state
+        XCTAssertEqual(postReconnect, .connected)
         XCTAssertGreaterThanOrEqual(state.attempts, 2, "Expected at least one reconnect attempt")
     }
 
