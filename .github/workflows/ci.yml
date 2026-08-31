@@ -99,13 +99,14 @@ jobs:
       - name: Coverage gate — Persistence ≥ 60% (ADR-0005)
         run: |
           set -euo pipefail
-          xcrun xccov view --report --json build/DerivedData/Logs/Test/*.xcresult > /tmp/app_cov.json || true
+          xcresult=$(find build/DerivedData/Logs/Test -maxdepth 1 -name "*.xcresult" | head -1)
+          if [ -z "${xcresult}" ]; then
+            echo "No xcresult found for app tests"; exit 1
+          fi
+          xcrun xccov view --report --json "${xcresult}" > /tmp/app_cov.json
           python3 - <<'PY'
           import json, sys
-          try:
-              data = json.load(open('/tmp/app_cov.json'))
-          except Exception as exc:
-              print('Coverage report unreadable:', exc); sys.exit(1)
+          data = json.load(open('/tmp/app_cov.json'))
           targets = data['coverage']['targets']
           print('Targets:', [(t['name'], round(t['lineCoverage'], 2)) for t in targets])
           persistence = [t for t in targets if t['name'].startswith('Persistence')]
