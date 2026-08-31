@@ -203,7 +203,7 @@ public actor SSHSession {
             do {
                 _ = try await transport.run("true")
             } catch {
-                await handleUnexpectedDrop()
+                handleUnexpectedDrop()
             }
         }
     }

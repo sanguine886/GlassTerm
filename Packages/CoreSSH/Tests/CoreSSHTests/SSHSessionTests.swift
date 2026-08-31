@@ -197,7 +197,8 @@ final class SSHSessionTests: XCTestCase {
         fake.simulateDrop()
 
         let deadline = Date().addingTimeInterval(5)
-        while state.attempts < 2, Date() < deadline {
+        while Date() < deadline {
+            if state.attempts >= 2, await session.state == .connected { break }
             try await Task.sleep(for: .milliseconds(20))
         }
         let postReconnect = await session.state
@@ -207,11 +208,10 @@ final class SSHSessionTests: XCTestCase {
 
     func testReconnectGivesUpAfterMaxAttempts() async throws {
         let session = makeSession()
-        // makeSession resets the fake state; arm the "every open fails" switch
-        // AFTER it so the initial connect still succeeds and only the
-        // reconnect loop exhausts its attempts.
-        state.failFirstAttempts = Int.max
         try await session.connect(config: makeConfig(), knownHosts: store)
+        // Arm "every open fails" only after the initial connect succeeded, so
+        // the reconnect loop is the part that exhausts its attempts.
+        state.failFirstAttempts = Int.max
 
         let live = await session.activeTransport
         let fake = try XCTUnwrap(live as? FakeTransport)

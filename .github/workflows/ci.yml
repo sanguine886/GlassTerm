@@ -145,6 +145,7 @@ jobs:
       - name: Build unsigned device .app
         run: |
           set -euo pipefail
+          mkdir -p build
           xcodebuild build \
             -project GlassTerm.xcodeproj \
             -scheme GlassTerm \

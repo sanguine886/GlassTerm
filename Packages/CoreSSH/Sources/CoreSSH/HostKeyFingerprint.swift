@@ -30,11 +30,11 @@ public struct HostKeyFingerprint: Equatable, Hashable, Codable, Sendable {
         case let .ed25519(raw):
             appendSSHString(Array("ssh-ed25519".utf8), to: &wire)
             appendSSHString(Array(raw), to: &wire)
-        case let .ecdsa(algorithm, _, point):
-            // RFC 5656 §3.1: the blob is `string(algorithm) + string(Q)`.
-            // The curve name ("nistp256"...) is implied by the algorithm and
-            // must NOT be serialized — ssh-keygen fingerprints exclude it.
+        case let .ecdsa(algorithm, curve, point):
+            // RFC 5656 §3.1: the blob is `string(algorithm) + string(curve) +
+            // string(Q)` — OpenSSH fingerprints hash this exact blob.
             appendSSHString(Array(algorithm.utf8), to: &wire)
+            appendSSHString(Array(curve.utf8), to: &wire)
             appendSSHString(Array(point), to: &wire)
         }
 
@@ -72,13 +72,15 @@ public struct HostKeyFingerprint: Equatable, Hashable, Codable, Sendable {
             return .ed25519(publicKey.rawRepresentation)
         case "ecdsaP256":
             guard let publicKey = payload.value as? P256.Signing.PublicKey else { return nil }
-            return .ecdsa(algorithm: "ecdsa-sha2-nistp256", curve: "nistp256", point: publicKey.rawRepresentation)
+            // rawRepresentation is the bare X||Y (64B); OpenSSH hashes the
+            // SEC1 uncompressed point 0x04||X||Y, so use x963Representation.
+            return .ecdsa(algorithm: "ecdsa-sha2-nistp256", curve: "nistp256", point: publicKey.x963Representation)
         case "ecdsaP384":
             guard let publicKey = payload.value as? P384.Signing.PublicKey else { return nil }
-            return .ecdsa(algorithm: "ecdsa-sha2-nistp384", curve: "nistp384", point: publicKey.rawRepresentation)
+            return .ecdsa(algorithm: "ecdsa-sha2-nistp384", curve: "nistp384", point: publicKey.x963Representation)
         case "ecdsaP521":
             guard let publicKey = payload.value as? P521.Signing.PublicKey else { return nil }
-            return .ecdsa(algorithm: "ecdsa-sha2-nistp521", curve: "nistp521", point: publicKey.rawRepresentation)
+            return .ecdsa(algorithm: "ecdsa-sha2-nistp521", curve: "nistp521", point: publicKey.x963Representation)
         default:
             return nil
         }
