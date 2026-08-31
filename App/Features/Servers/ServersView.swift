@@ -65,7 +65,11 @@ struct ServersView: View {
                     Text("error.title"),
                     isPresented: .init(
                         get: { errorMessage != nil },
-                        set: { if !$0 { errorMessage = nil } }
+                        set: {
+                            if !$0 {
+                                errorMessage = nil
+                            }
+                        }
                     )
                 ) {
                     Button(Text("common.ok"), role: .cancel) {}
@@ -166,12 +170,12 @@ struct ServersView: View {
             path.append(record.id)
         } catch let error as SSHError {
             switch error {
-            case .hostKeyUnknown(let fingerprint):
+            case let .hostKeyUnknown(fingerprint):
                 flow = ConnectFlow(
                     record: record, session: session, config: config,
                     kind: .new(fingerprint)
                 )
-            case .hostKeyChanged(let pinned, let presented):
+            case let .hostKeyChanged(pinned, presented):
                 flow = ConnectFlow(
                     record: record, session: session, config: config,
                     kind: .changed(pinned: pinned, presented: presented)
@@ -191,9 +195,9 @@ struct ServersView: View {
         }
         Task {
             switch flow.kind {
-            case .new(let fingerprint):
+            case let .new(fingerprint):
                 manager.knownHosts.trust(hostIdentifier: flow.config.hostIdentifier, fingerprint: fingerprint)
-            case .changed(_, let changed):
+            case let .changed(_, changed):
                 manager.knownHosts.repin(hostIdentifier: flow.config.hostIdentifier, fingerprint: changed)
             }
 

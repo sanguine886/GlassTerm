@@ -27,10 +27,10 @@ public struct HostKeyFingerprint: Equatable, Hashable, Codable, Sendable {
 
         var wire: [UInt8] = []
         switch payload {
-        case .ed25519(let raw):
+        case let .ed25519(raw):
             appendSSHString(Array("ssh-ed25519".utf8), to: &wire)
             appendSSHString(Array(raw), to: &wire)
-        case .ecdsa(let algorithm, let curve, let point):
+        case let .ecdsa(algorithm, curve, point):
             appendSSHString(Array(algorithm.utf8), to: &wire)
             appendSSHString(Array(curve.utf8), to: &wire)
             appendSSHString(Array(point), to: &wire)
@@ -48,7 +48,7 @@ public struct HostKeyFingerprint: Equatable, Hashable, Codable, Sendable {
         var algorithmName: String {
             switch self {
             case .ed25519: "ssh-ed25519"
-            case .ecdsa(let algorithm, _, _): algorithm
+            case let .ecdsa(algorithm, _, _): algorithm
             }
         }
     }

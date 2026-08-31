@@ -31,9 +31,9 @@ let package = Package(
             dependencies: [
                 "CoreSSH",
                 .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "NIOSSH", package: "swift-nio-ssh")
+                .product(name: "NIOSSH", package: "swift-nio-ssh"),
             ],
             path: "Tests/CoreSSHTests"
         ),
-    ],
+    ]
 )

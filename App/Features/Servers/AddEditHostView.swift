@@ -104,7 +104,11 @@ struct AddEditHostView: View {
                 Text("error.title"),
                 isPresented: .init(
                     get: { errorMessage != nil },
-                    set: { if !$0 { errorMessage = nil } }
+                    set: {
+                        if !$0 {
+                            errorMessage = nil
+                        }
+                    }
                 )
             ) {
                 Button(Text("common.ok"), role: .cancel) {}
@@ -153,7 +157,7 @@ struct AddEditHostView: View {
     }
 
     private func importKey(_ result: Result<[URL], Error>) {
-        guard case .success(let urls) = result, let url = urls.first else { return }
+        guard case let .success(urls) = result, let url = urls.first else { return }
         let secured = url.startAccessingSecurityScopedResource()
         defer {
             if secured {

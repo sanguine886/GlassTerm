@@ -45,7 +45,7 @@ final class KnownHostsStoreTests: XCTestCase {
         XCTAssertEqual(store.verify(hostIdentifier: "h:22", fingerprint: ed25519), .newHost)
     }
 
-    func testPinsPersistAcrossInstances() throws {
+    func testPinsPersistAcrossInstances() {
         KnownHostsStore(storeURL: storeURL).trust(hostIdentifier: "h:22", fingerprint: ed25519)
 
         let reloaded = KnownHostsStore(storeURL: storeURL)

@@ -164,10 +164,12 @@ public actor SSHSession {
         while policy.shouldRetry(afterFailedAttempts: failures) {
             let delay = policy.delaySeconds(
                 afterFailedAttempts: failures,
-                jitterSeconds: Double.random(in: 0...0.25)
+                jitterSeconds: Double.random(in: 0 ... 0.25)
             )
             try? await Task.sleep(for: .seconds(delay))
-            if userClosed { return }
+            if userClosed {
+                return
+            }
 
             setState(.reconnecting(attempt: failures + 1))
             do {
@@ -190,7 +192,7 @@ public actor SSHSession {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(interval))
                 guard let self else { return }
-                await self.sendKeepalive()
+                await sendKeepalive()
             }
         }
     }
@@ -234,7 +236,7 @@ public actor SSHSession {
             return .connectionFailed(error.localizedDescription)
         case .newHost:
             return .hostKeyUnknown(fingerprint: presented)
-        case .changed(let pinned):
+        case let .changed(pinned):
             return .hostKeyChanged(pinned: pinned, presented: presented)
         }
     }

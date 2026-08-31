@@ -49,7 +49,7 @@ public final class HostRecord {
         self.hostname = hostname
         self.port = port
         self.username = username
-        self.authKindRaw = authKind.rawValue
+        authKindRaw = authKind.rawValue
         self.secretRef = secretRef
         self.passphraseRef = passphraseRef
         self.group = group

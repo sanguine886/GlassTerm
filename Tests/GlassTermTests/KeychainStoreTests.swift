@@ -63,7 +63,8 @@ extension KeychainStore {
     private func mirrorService() -> String {
         let mirror = Mirror(reflecting: self)
         guard let child = mirror.children.first(where: { $0.label == "service" }),
-              let service = child.value as? String else {
+              let service = child.value as? String
+        else {
             return ""
         }
         return service

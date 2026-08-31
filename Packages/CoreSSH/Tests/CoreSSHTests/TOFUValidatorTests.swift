@@ -64,7 +64,7 @@ final class TOFUValidatorTests: XCTestCase {
         switch outcome {
         case .success:
             return (true, nil)
-        case .failure(let error):
+        case let .failure(error):
             return (false, error)
         case nil:
             return (false, nil)

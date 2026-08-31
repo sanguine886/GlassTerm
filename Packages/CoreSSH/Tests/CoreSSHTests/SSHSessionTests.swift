@@ -1,10 +1,9 @@
-import CoreSSH
+
+@testable import CoreSSH
 import NIO
 import NIOCore
 import NIOSSH
 import XCTest
-
-@testable import CoreSSH
 
 /// A transport whose handshake runs the REAL TOFU validator against a fixture
 /// host key, then either accepts (after `failFirst` simulated network failures)
@@ -24,9 +23,11 @@ final class FakeTransport: SSHTransport, @unchecked Sendable {
         set { onDropBox.set(newValue) }
     }
 
-    var isConnected: Bool { opened }
+    var isConnected: Bool {
+        opened
+    }
 
-    func open(config: SSHHostConfig, validator: TOFUHostKeyValidator) async throws {
+    func open(config _: SSHHostConfig, validator: TOFUHostKeyValidator) async throws {
         let index = state.nextAttempt()
         if index <= state.failFirstAttempts {
             throw SSHError.connectionFailed("simulated network failure #\(index)")
@@ -46,7 +47,7 @@ final class FakeTransport: SSHTransport, @unchecked Sendable {
         return "ok:\(command)"
     }
 
-    func requestShell(cols: Int, rows: Int) async throws -> ShellStreams {
+    func requestShell(cols _: Int, rows _: Int) async throws -> ShellStreams {
         throw SSHError.sessionNotConnected
     }
 
@@ -92,7 +93,7 @@ final class FakeState: @unchecked Sendable {
 
     init(failFirstAttempts: Int = 0) {
         self.failFirstAttempts = failFirstAttempts
-        self.eventLoop = group.next()
+        eventLoop = group.next()
     }
 
     func nextAttempt() -> Int {
@@ -137,14 +138,14 @@ final class SSHSessionTests: XCTestCase {
         let session = makeSession()
 
         try await session.connect(config: makeConfig(), knownHosts: store)
-        XCTAssertEqual(await session.state, .connected)
+        await XCTAssertEqual(session.state, .connected)
 
         let result = try await session.run("uname -a")
         XCTAssertEqual(result.output, "ok:uname -a")
         XCTAssertGreaterThan(result.durationSeconds, 0)
 
         await session.disconnect()
-        XCTAssertEqual(await session.state, .closed)
+        await XCTAssertEqual(session.state, .closed)
     }
 
     func testUnpinnedHostSurfacesTOFUError() async throws {
@@ -155,13 +156,13 @@ final class SSHSessionTests: XCTestCase {
             try await session.connect(config: makeConfig(), knownHosts: unpinnedStore)
             XCTFail("Expected hostKeyUnknown")
         } catch let error as SSHError {
-            guard case .hostKeyUnknown(let fingerprint) = error else {
+            guard case let .hostKeyUnknown(fingerprint) = error else {
                 return XCTFail("Unexpected error: \(error)")
             }
             XCTAssertEqual(fingerprint, FakeState.fixtureFingerprint)
         }
         // The connection attempt failed, so the session reports failure state.
-        XCTAssertEqual(await session.state, .failed(.hostKeyUnknown(fingerprint: FakeState.fixtureFingerprint)))
+        await XCTAssertEqual(session.state, .failed(.hostKeyUnknown(fingerprint: FakeState.fixtureFingerprint)))
     }
 
     func testChangedHostKeyIsBlocked() async throws {
@@ -173,7 +174,7 @@ final class SSHSessionTests: XCTestCase {
             try await session.connect(config: makeConfig(), knownHosts: store)
             XCTFail("Expected hostKeyChanged")
         } catch let error as SSHError {
-            guard case .hostKeyChanged(let pinned, let presented) = error else {
+            guard case let .hostKeyChanged(pinned, presented) = error else {
                 return XCTFail("Unexpected error: \(error)")
             }
             XCTAssertEqual(pinned, impostor)
@@ -194,7 +195,7 @@ final class SSHSessionTests: XCTestCase {
         while await session.state != .connected, Date() < deadline {
             try await Task.sleep(for: .milliseconds(20))
         }
-        XCTAssertEqual(await session.state, .connected)
+        await XCTAssertEqual(session.state, .connected)
         XCTAssertGreaterThanOrEqual(state.attempts, 2, "Expected at least one reconnect attempt")
     }
 

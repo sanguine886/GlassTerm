@@ -1,9 +1,7 @@
 import Citadel
-import CoreSSH
+@testable import CoreSSH
 import Crypto
 import XCTest
-
-@testable import CoreSSH
 
 /// OpenSSH private-key parsing for key auth (ED25519 / RSA, with passphrase).
 final class KeyParsingTests: XCTestCase {
