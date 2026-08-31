@@ -168,6 +168,7 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -derivedDataPath build/ipa \
+            -skipPackagePluginValidation \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             2>&1 | tee build/build.log | xcbeautify --quiet || (echo "=== full build log tail ===" && tail -120 build/build.log && exit 1)

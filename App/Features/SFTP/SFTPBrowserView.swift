@@ -75,7 +75,11 @@ struct SFTPBrowserView: View {
         }
         .alert(Text("error.title"), isPresented: .init(
             get: { errorMessage != nil },
-            set: { if !$0 { errorMessage = nil } }
+            set: {
+                if !$0 {
+                    errorMessage = nil
+                }
+            }
         )) {
             Button("common.ok", role: .cancel) {}
         } message: {
@@ -89,7 +93,7 @@ struct SFTPBrowserView: View {
                 crumb("sftp.root", path: "/")
                 let components = currentPath.split(separator: "/")
                 var accumulated = ""
-                ForEach(Array(components.enumerated()), id: \.offset) { index, component in
+                ForEach(Array(components.enumerated()), id: \.offset) { _, component in
                     Image(systemName: "chevron.right")
                         .font(.caption2)
                     accumulated += "/" + component
@@ -170,7 +174,9 @@ struct SFTPBrowserView: View {
     // MARK: - Actions
 
     private func open() async {
-        if isLoading { return }
+        if isLoading {
+            return
+        }
         isLoading = true
         defer { isLoading = false }
         do {
@@ -280,7 +286,8 @@ struct SFTPBrowserView: View {
         })
         // Present from the scene's root view controller.
         if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let root = scene.windows.first?.rootViewController {
+           let root = scene.windows.first?.rootViewController
+        {
             root.present(alert, animated: true)
         }
     }
@@ -289,7 +296,11 @@ struct SFTPBrowserView: View {
         guard case let .success(urls) = result else { return }
         for url in urls {
             let secured = url.startAccessingSecurityScopedResource()
-            defer { if secured { url.stopAccessingSecurityScopedResource() } }
+            defer {
+                if secured {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
             guard let data = try? Data(contentsOf: url) else { continue }
             let remote = SFTPPath.joining(currentPath, url.lastPathComponent)
             Task {
@@ -315,7 +326,8 @@ struct SFTPBrowserView: View {
             try? data.write(to: temp)
             let controller = UIActivityViewController(activityItems: [temp], applicationActivities: nil)
             if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-               let root = scene.windows.first?.rootViewController {
+               let root = scene.windows.first?.rootViewController
+            {
                 root.present(controller, animated: true)
             }
         }
