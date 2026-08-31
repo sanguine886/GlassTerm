@@ -39,6 +39,32 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
+      - name: CoreSSH engine tests (swift test)
+        run: |
+          set -euo pipefail
+          swift test --package-path Packages/CoreSSH --enable-code-coverage 2>&1 | tail -30
+
+      - name: Coverage gate — CoreSSH ≥ 60% (ADR-0005)
+        run: |
+          set -euo pipefail
+          report=$(find Packages/CoreSSH/.build -name "*.xccovreport" | head -1)
+          if [ -z "${report}" ]; then
+            echo "No xccovreport found for CoreSSH"; exit 1
+          fi
+          xcrun xccov view --report --json "${report}" > /tmp/core_ssh_cov.json
+          python3 - <<'PY'
+          import json, sys
+          data = json.load(open('/tmp/core_ssh_cov.json'))
+          targets = data['coverage']['targets']
+          core = [t for t in targets if t['name'] == 'CoreSSH']
+          if not core:
+              print('CoreSSH target missing from coverage report:', [t['name'] for t in targets]); sys.exit(1)
+          t = core[0]
+          ratio = t['lineCoverage']
+          print(f"CoreSSH line coverage: {ratio:.1%} ({t['coveredLines']}/{t['executableLines']})")
+          sys.exit(0 if ratio >= 0.60 else 1)
+          PY
+
       - name: Ensure iPhone 16 Pro simulator exists
         run: |
           set -euo pipefail
@@ -65,6 +91,27 @@ jobs:
             -enableCodeCoverage YES \
             -derivedDataPath build/DerivedData \
             2>&1 | xcbeautify --quiet
+
+      - name: Coverage gate — Persistence ≥ 60% (ADR-0005)
+        run: |
+          set -euo pipefail
+          xcrun xccov view --report --json build/DerivedData/Logs/Test/*.xcresult > /tmp/app_cov.json || true
+          python3 - <<'PY'
+          import json, sys
+          try:
+              data = json.load(open('/tmp/app_cov.json'))
+          except Exception as exc:
+              print('Coverage report unreadable:', exc); sys.exit(1)
+          targets = data['coverage']['targets']
+          print('Targets:', [(t['name'], round(t['lineCoverage'], 2)) for t in targets])
+          persistence = [t for t in targets if t['name'].startswith('Persistence')]
+          if not persistence:
+              print('Persistence target missing from coverage report'); sys.exit(1)
+          t = persistence[0]
+          ratio = t['lineCoverage']
+          print(f"Persistence line coverage: {ratio:.1%} ({t['coveredLines']}/{t['executableLines']})")
+          sys.exit(0 if ratio >= 0.60 else 1)
+          PY
 
       - name: Coverage report
         if: always()

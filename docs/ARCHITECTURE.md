@@ -41,13 +41,15 @@ Packages/
 
 ```sh
 swiftlint --quiet && swiftformat --lint .
+swift test --package-path Packages/CoreSSH --enable-code-coverage   # 引擎单测（macOS）
 xcodebuild test -project GlassTerm.xcodeproj -scheme GlassTerm \
   -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
   -enableCodeCoverage YES
 ```
 
-CI（`.github/workflows/ci.yml`）在 `macos-26`（Xcode 26，iOS 26 SDK）上执行上述全部命令。
-单测底线与覆盖率门槛见规范 §6.5.2；P0 阶段为纯骨架，覆盖率硬门槛自 P1 引入（ADR-0005）。
+CI（`.github/workflows/ci.yml`）在 `macos-26`（Xcode 26，iOS 26 SDK）上执行上述全部命令，
+并断言 CoreSSH 与 Persistence 行覆盖率 ≥ 60%（ADR-0005）。
+单测底线清单见规范 §6.5.2。
 
 ## 5. 生成物纪律
 
@@ -55,14 +57,26 @@ CI（`.github/workflows/ci.yml`）在 `macos-26`（Xcode 26，iOS 26 SDK）上�
 - `App/Info.plist` 由 XcodeGen 从 `project.yml` 的 `info:` 块生成，不入库；
 - SwiftData 宏展开同理（落地后）。
 
-## 6. ADR 附录
+## 6. 依赖精确版本（ADR-0002）
+
+| 依赖 | 锁定版本 | 用途 |
+|---|---|---|
+| Citadel | 0.12.1 | SSH/SFTP 客户端 |
+| swift-nio-ssh（Wellz26 fork，Citadel 上游要求） | 0.3.4 | NIOSSH 协议栈 |
+| swift-nio | 2.81.0 | 事件循环 |
+| swift-crypto | 3.12.3 | 密钥类型（Crypto 模块） |
+
+## 7. ADR 附录
 
 | # | 决策（一行） |
 |---|---|
 | ADR-0001 | 工程文件用 XcodeGen 从 `project.yml` 生成，产物 gitignore，本地与 CI 均先 `xcodegen generate` |
-| ADR-0002 | P0 零第三方依赖；依赖精确版本（exactVersion）锁定自首次引入生效——P1 引入 Citadel、P2 引入 SwiftTerm，即「依赖锁定」交付物的落地方式 |
-| ADR-0003 | 单测集中放在宿主 App 的 `GlassTermTests` / `GlassTermUITests`（仅依赖公开 API，不用 @testable），保证单一 `xcodebuild test -scheme GlassTerm` 入口；包内不设独立 test target |
+| ADR-0002 | 依赖精确版本（exactVersion）锁定自首次引入生效：P1 锁定上表四个依赖，即「依赖锁定」交付物的落地方式 |
+| ADR-0003 | 单测分两处：CoreSSH 引擎测试放包内 `CoreSSHTests`（`swift test`，需 NIO/NIOSSH 类型构造真实校验握手），其余在宿主 App 的 `GlassTermTests` / `GlassTermUITests`（仅依赖公开 API） |
 | ADR-0004 | `maidkit_ref/` 为本地只读精读副本，不入公共仓库（第三方代码再分发的许可风险），在 .gitignore 固定 |
-| ADR-0005 | 60% 覆盖率硬门槛自 P1（首个有真实逻辑的阶段）起在 CI 启用；P0 只采集覆盖率报告不做断言 |
+| ADR-0005 | 覆盖率 ≥60% 硬门槛自 P1 起在 CI 启用（CoreSSH 与 Persistence 分别断言）；P0 只采集不设门 |
 | ADR-0006 | 颜色令牌直接映射系统语义色（label / secondaryLabel / systemBackground 等），深浅色对比度由系统保证，不自绘调色板 |
 | ADR-0007 | 文案走 String Catalog（`App/Resources/Localizable.xcstrings`），首发 zh-Hans + en；代码标识符一律英文 |
+| ADR-0008 | 主机密钥指纹：swift-nio-ssh 不公开 key 序列化，指纹经 Mirror 读取 `NIOSSHPublicKey` 内部 backing 提取原始密钥再按 RFC 4253 wire 格式哈希；以真实 `ssh-keygen` 指纹作 Guard 测试钉死内部布局，上游变更时 CI 立即失败并按新布局修复 |
+| ADR-0009 | SSH keepalive 以周期性 `true` exec 通道实现（Citadel 0.12 无协议级 keepalive 配置），默认 15s 可配 |
+| ADR-0010 | 客户端私钥导入 P1 支持 OpenSSH-ED25519 与 RSA（含口令解密）；ECDSA-P256 客户端密钥解析随 P3 补齐——主机侧 ECDSA-P256/384/521 指纹校验 P1 已支持 |

@@ -2,14 +2,20 @@
 
 > 与代码同步演进。安全红线见开发提示词 §4.6 / §4.7 / §6.4。
 
-## 1. 秘密管理（P1 起强制）
+## 1. 秘密管理（P1 ✅）
 
 - 密码、私钥、passphrase、AI API Key **只存 Keychain**，属性
   `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`，禁止备份迁移；
 - SwiftData、日志（os.Logger）、UserDefaults 出现秘密即违规；
 - 秘密隔离有专项单测（Persistence 模块，P1 起随阶段补充）。
 
-## 2. 主机密钥校验（P1）
+## 当前状态（P1）
+
+- 秘密管理已落地：密码 / 私钥 / 口令仅存 Keychain（`ThisDeviceOnly`），HostRecord 只持 opaque 引用（有单测断言）；
+- 主机密钥 TOFU 已落地：SHA256 指纹首连确认、变更阻断告警、人工核实后可重固定；
+- 错误与连接日志不落盘；调试页输出仅存内存。
+
+## 2. 主机密钥校验（P1 ✅）
 
 - 首连展示指纹，用户确认后 TOFU 固化；密钥变更即阻断并醒目告警；
 - 校验不可跳过；调试例外必须用编译 flag 且不出现在 Release。
