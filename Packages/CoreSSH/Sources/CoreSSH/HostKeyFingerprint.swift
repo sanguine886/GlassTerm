@@ -1,5 +1,6 @@
 import Crypto
 import Foundation
+import NIOSSH
 
 /// A stable, human-verifiable identifier of an SSH host key: the OpenSSH-style
 /// SHA256 fingerprint over the key's wire-format blob (RFC 4253).

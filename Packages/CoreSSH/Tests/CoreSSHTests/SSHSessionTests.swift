@@ -1,7 +1,10 @@
 import CoreSSH
+import NIO
 import NIOCore
 import NIOSSH
 import XCTest
+
+@testable import CoreSSH
 
 /// A transport whose handshake runs the REAL TOFU validator against a fixture
 /// host key, then either accepts (after `failFirst` simulated network failures)

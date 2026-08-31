@@ -27,7 +27,8 @@ public final class HostStore: @unchecked Sendable {
     /// each other's unsaved mutations.
     public func update(_ record: HostRecord) throws {
         let context = ModelContext(container)
-        let descriptor = FetchDescriptor<HostRecord>(predicate: #Predicate { $0.id == record.id })
+        let id = record.id
+        let descriptor = FetchDescriptor<HostRecord>(predicate: #Predicate { $0.id == id })
         guard let managed = try context.fetch(descriptor).first else { return }
         managed.name = record.name
         managed.hostname = record.hostname

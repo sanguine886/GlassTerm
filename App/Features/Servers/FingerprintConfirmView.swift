@@ -26,8 +26,8 @@ struct FingerprintConfirmView: View {
 
             VStack(alignment: .leading, spacing: GlassSpacing.xs) {
                 if case .changed(let pinned, _) = kind {
-                    fingerprintRow(labelKey: "fp.pinned", fingerprint: pinned)
-                }
+                fingerprintRow(labelKey: "fp.pinned", fingerprint: pinned)
+            }
                 fingerprintRow(labelKey: "fp.presented", fingerprint: presented)
             }
             .padding(GlassSpacing.md)
@@ -59,7 +59,9 @@ struct FingerprintConfirmView: View {
     }
 
     private var isChanged: Bool {
-        if case .changed = kind { return true }
+        if case .changed = kind {
+            return true
+        }
         return false
     }
 
@@ -77,8 +79,10 @@ struct FingerprintConfirmView: View {
 
     private var presented: HostKeyFingerprint {
         switch kind {
-        case .new(let fingerprint): fingerprint
-        case .changed(_, let presented): presented
+        case .new(let fingerprint):
+            fingerprint
+        case .changed(_, let changed):
+            changed
         }
     }
 

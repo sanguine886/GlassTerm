@@ -141,7 +141,9 @@ struct ServersView: View {
     }
 
     private func connect(_ record: HostRecord) {
-        guard connectingHostID == nil else { return }
+        guard connectingHostID == nil else {
+            return
+        }
         connectingHostID = record.id
         Task {
             defer { connectingHostID = nil }
@@ -191,8 +193,8 @@ struct ServersView: View {
             switch flow.kind {
             case .new(let fingerprint):
                 manager.knownHosts.trust(hostIdentifier: flow.config.hostIdentifier, fingerprint: fingerprint)
-            case .changed(_, let presented):
-                manager.knownHosts.repin(hostIdentifier: flow.config.hostIdentifier, fingerprint: presented)
+            case .changed(_, let changed):
+                manager.knownHosts.repin(hostIdentifier: flow.config.hostIdentifier, fingerprint: changed)
             }
 
             do {

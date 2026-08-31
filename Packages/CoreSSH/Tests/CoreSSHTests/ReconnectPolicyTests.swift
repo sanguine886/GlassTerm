@@ -21,7 +21,7 @@ final class ReconnectPolicyTests: XCTestCase {
     func testRetryStopsAtMaxAttempts() {
         let policy = ReconnectPolicy(maxAttempts: 5)
 
-        for failed in 0..<5 {
+        for failed in 0 ..< 5 {
             XCTAssertTrue(policy.shouldRetry(afterFailedAttempts: failed))
         }
         XCTAssertFalse(policy.shouldRetry(afterFailedAttempts: 5))

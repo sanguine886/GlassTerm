@@ -24,23 +24,12 @@ public struct ShellStdin: Sendable {
         try await resizeHandler(cols, rows)
     }
 
-    init(
-        write: @escaping @Sendable (Data) async throws -> Void,
-        resize: @escaping @Sendable (Int, Int) async throws -> Void
-    ) {
-        self.writeHandler = write
-        self.resizeHandler = resize
-    }
 }
 
 public struct ShellStreams: Sendable {
     public let output: AsyncStream<ShellEvent>
     public let stdin: ShellStdin
 
-    init(output: AsyncStream<ShellEvent>, stdin: ShellStdin) {
-        self.output = output
-        self.stdin = stdin
-    }
 }
 
 /// One open SSH connection's capabilities. Implemented by `CitadelTransport`
@@ -67,8 +56,6 @@ public final class CitadelTransport: SSHTransport, @unchecked Sendable {
     private var client: SSHClient?
     private let clientLock = NSLock()
     private let dropBox = CallbackBox()
-
-    public init() {}
 
     public var onDrop: @Sendable () -> Void {
         get { dropBox.get() ?? {} }
@@ -116,9 +103,9 @@ public final class CitadelTransport: SSHTransport, @unchecked Sendable {
                     opened.succeed()
                     for try await event in inbound {
                         switch event {
-                        case .stdout(let buffer):
+                        case let .stdout(buffer):
                             continuation.yield(.stdout(Data(buffer: buffer)))
-                        case .stderr(let buffer):
+                        case let .stderr(buffer):
                             continuation.yield(.stderr(Data(buffer: buffer)))
                         }
                     }
@@ -151,10 +138,10 @@ public final class CitadelTransport: SSHTransport, @unchecked Sendable {
 
     public func close() async {
         clientLock.lock()
-        let client = self.client
-        self.client = nil
+        let stale = client
+        client = nil
         clientLock.unlock()
-        try? await client?.close()
+        try? await stale?.close()
     }
 
     // MARK: - Internals
@@ -174,9 +161,9 @@ public final class CitadelTransport: SSHTransport, @unchecked Sendable {
 
     static func authenticationMethod(for config: SSHHostConfig) throws -> SSHAuthenticationMethod {
         switch config.auth {
-        case .password(let password):
+        case let .password(password):
             .passwordBased(username: config.username, password: password)
-        case .privateKey(let pem, let passphrase):
+        case let .privateKey(pem, passphrase):
             let decryption = passphrase.flatMap { Data($0.utf8) }
             let trimmed = pem.trimmingCharacters(in: .whitespacesAndNewlines)
             if trimmed.contains("BEGIN OPENSSH PRIVATE KEY") || trimmed.contains("ssh-ed25519") {

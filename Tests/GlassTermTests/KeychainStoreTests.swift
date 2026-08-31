@@ -50,10 +50,8 @@ final class KeychainStoreTests: XCTestCase {
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         XCTAssertEqual(status, errSecSuccess)
         let attributes = try XCTUnwrap(result as? [String: Any])
-        XCTAssertEqual(
-            attributes[kSecAttrAccessible as String] as? String,
-            kSecAttrAccessibleWhenUnlockedThisDeviceOnly as String
-        )
+        let accessible = attributes[kSecAttrAccessible as String] as? String
+        XCTAssertEqual(accessible, kSecAttrAccessibleWhenUnlockedThisDeviceOnly as String)
     }
 }
 

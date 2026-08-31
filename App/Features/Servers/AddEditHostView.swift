@@ -141,8 +141,9 @@ struct AddEditHostView: View {
 
     private var inputIsValid: Bool {
         let secretReady = authKind == .password ? !password.isEmpty : !keyPEM.isEmpty
-        return !name.isEmpty && !hostname.isEmpty && !username.isEmpty
-            && (Int(portText) ?? 0) > 0 && (secretReady || existing?.secretRef != nil)
+        let portValid = (Int(portText) ?? 0) > 0
+        let secretAvailable = secretReady || existing?.secretRef != nil
+        return !name.isEmpty && !hostname.isEmpty && !username.isEmpty && portValid && secretAvailable
     }
 
     private func fieldLabel(_ key: LocalizedStringKey) -> some View {
@@ -154,7 +155,11 @@ struct AddEditHostView: View {
     private func importKey(_ result: Result<[URL], Error>) {
         guard case .success(let urls) = result, let url = urls.first else { return }
         let secured = url.startAccessingSecurityScopedResource()
-        defer { if secured { url.stopAccessingSecurityScopedResource() } }
+        defer {
+            if secured {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
         do {
             let raw = try Data(contentsOf: url)
             guard let pem = String(data: raw, encoding: .utf8), pem.contains("PRIVATE KEY") else {
