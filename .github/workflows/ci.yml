@@ -42,30 +42,31 @@ jobs:
       - name: CoreSSH engine tests (swift test)
         run: |
           set -euo pipefail
-          # --xccov-output-path: swift test on macOS otherwise emits only LLVM
-          # profdata, which the coverage gate (find *.xccovreport) cannot read.
-          swift test --package-path Packages/CoreSSH --enable-code-coverage \
-            --xccov-output-path Packages/CoreSSH/.build/codecov 2>&1
+          swift test --package-path Packages/CoreSSH --enable-code-coverage 2>&1
 
       - name: Coverage gate — CoreSSH ≥ 60% (ADR-0005)
         run: |
           set -euo pipefail
-          report=$(find Packages/CoreSSH/.build -name "*.xccovreport" | head -1)
-          if [ -z "${report}" ]; then
-            echo "No xccovreport found for CoreSSH"; exit 1
+          # swift test emits LLVM profdata (not xccov), so llvm-cov reads it.
+          profdata=$(find Packages/CoreSSH/.build -name "*.profdata" | head -1)
+          if [ -z "${profdata}" ]; then
+            echo "No profdata found for CoreSSH"; exit 1
           fi
-          xcrun xccov view --report --json "${report}" > /tmp/core_ssh_cov.json
+          binary=$(find Packages/CoreSSH/.build -type f -name "CoreSSHPackageTests" | head -1)
+          if [ -z "${binary}" ]; then
+            echo "No CoreSSHPackageTests binary found"; exit 1
+          fi
+          xcrun llvm-cov report -instr-profile "${profdata}" "${binary}" \
+            -ignore-filename-regex "(Tests/|\.build/checkouts/)" \
+            > /tmp/core_ssh_cov.txt
           python3 - <<'PY'
-          import json, sys
-          data = json.load(open('/tmp/core_ssh_cov.json'))
-          targets = data['coverage']['targets']
-          core = [t for t in targets if t['name'] == 'CoreSSH']
-          if not core:
-              print('CoreSSH target missing from coverage report:', [t['name'] for t in targets]); sys.exit(1)
-          t = core[0]
-          ratio = t['lineCoverage']
-          print(f"CoreSSH line coverage: {ratio:.1%} ({t['coveredLines']}/{t['executableLines']})")
-          sys.exit(0 if ratio >= 0.60 else 1)
+          import re, sys
+          text = open('/tmp/core_ssh_cov.txt').read()
+          total = [l for l in text.splitlines() if l.strip().startswith('TOTAL')][-1]
+          cov = float(re.findall(r'([\d.]+)%', total)[-1])
+          print(total.strip())
+          print(f'CoreSSH line coverage: {cov:.1f}%')
+          sys.exit(0 if cov >= 60.0 else 1)
           PY
 
       - name: Ensure iPhone 16 Pro simulator exists
