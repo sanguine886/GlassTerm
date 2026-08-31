@@ -1,6 +1,7 @@
 import Citadel
 import Crypto
 import Foundation
+import NIOConcurrencyHelpers
 import NIOCore
 
 /// Byte streams for an interactive shell session (PTY-backed).
