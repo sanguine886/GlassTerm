@@ -220,12 +220,9 @@ final class OpenSignal: @unchecked Sendable {
     /// Resumes (and consumes) any pending waiter; safe to call multiple times.
     var settleIfFirst: Bool {
         lock.withLock {
-            if settled {
-                false
-            } else {
-                settled = true
-                true
-            }
+            let first = !settled
+            if first { settled = true }
+            return first
         }
     }
 

@@ -42,7 +42,7 @@ jobs:
       - name: CoreSSH engine tests (swift test)
         run: |
           set -euo pipefail
-          swift test --package-path Packages/CoreSSH --enable-code-coverage 2>&1 | tail -30
+          swift test --package-path Packages/CoreSSH --enable-code-coverage 2>&1
 
       - name: Coverage gate — CoreSSH ≥ 60% (ADR-0005)
         run: |

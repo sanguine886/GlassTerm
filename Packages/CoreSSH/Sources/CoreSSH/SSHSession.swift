@@ -158,7 +158,7 @@ public actor SSHSession {
     }
 
     private func reconnectLoop() async {
-        guard let config, let validator, let knownHosts else { return }
+        guard let config, let validator else { return }
 
         var failures = 0
         while policy.shouldRetry(afterFailedAttempts: failures) {
