@@ -27,8 +27,8 @@ public final class KeychainStore: SecretStoring, @unchecked Sendable {
         guard let data = secret.data(using: .utf8) else {
             throw SecretStoreError.encodingFailed
         }
-        // Replace-or-add semantics.
-        delete(account: account)
+        // Replace-or-add semantics: best-effort removal of any previous value.
+        try? delete(account: account)
 
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,

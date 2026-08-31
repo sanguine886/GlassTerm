@@ -56,7 +56,8 @@ final class TOFUValidatorTests: XCTestCase {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer { try? group.syncShutdownGracefully() }
         let promise = group.next().makePromise(of: Void.self)
-        validator.validateHostKey(hostKey: try makeServerKey(), validationCompletePromise: promise)
+        let key = try makeServerKey()
+        validator.validateHostKey(hostKey: key, validationCompletePromise: promise)
 
         var outcome: Result<Void, Error>?
         let expectation = expectation(description: "validation completes")
