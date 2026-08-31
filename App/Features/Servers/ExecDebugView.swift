@@ -27,7 +27,7 @@ struct ExecDebugView: View {
                     GlassCard {
                         VStack(alignment: .leading, spacing: GlassSpacing.sm) {
                             HStack(spacing: GlassSpacing.sm) {
-                                TextField(Text("exec.placeholder"), text: $command)
+                                TextField("exec.placeholder", text: $command)
                                     .textFieldStyle(.roundedBorder)
                                     .font(.glassMono(13))
                                     .textInputAutocapitalization(.never)

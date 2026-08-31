@@ -1,7 +1,9 @@
 import CoreSSH
+import Foundation
 import GlassKit
 import Observation
 import Persistence
+import SwiftData
 import SwiftUI
 
 enum FingerprintFlowKind: Equatable {
@@ -28,6 +30,14 @@ struct ServersView: View {
     @State private var path: [UUID] = []
     @State private var errorMessage: String?
     @State private var connectingHostID: UUID?
+
+    /// `@Query`'s macro-generated private initializer suppresses the default
+    /// `init()`, so it is declared explicitly (SwiftData stores + environment
+    /// object are bootstrapped here).
+    init() {
+        _manager = Environment(HostManager.self)
+        _hosts = Query(sort: [SortDescriptor(\HostRecord.createdAt)])
+    }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -72,7 +82,7 @@ struct ServersView: View {
                         }
                     )
                 ) {
-                    Button(Text("common.ok"), role: .cancel) {}
+                    Button("common.ok", role: .cancel) {}
                 } message: {
                     Text(errorMessage ?? "")
                 }
@@ -125,7 +135,7 @@ struct ServersView: View {
                     }
                     Spacer()
                     if let last = record.lastConnectedAt {
-                        Text("host.lastConnected \(Text(last, format: .relative(past: true)))")
+                        Text("host.lastConnected \(Text(last, style: .relative))")
                             .font(.caption2)
                             .foregroundStyle(Color.glassSecondaryText)
                     }
@@ -137,8 +147,8 @@ struct ServersView: View {
             .accessibilityIdentifier("host.card.\(record.id.uuidString)")
         }
         .contextMenu {
-            Button(Text("common.edit")) { editingHost = record }
-            Button(Text("common.delete"), role: .destructive) {
+            Button("common.edit") { editingHost = record }
+            Button("common.delete", role: .destructive) {
                 try? manager.delete(record)
             }
         }

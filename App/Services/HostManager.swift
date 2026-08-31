@@ -1,4 +1,5 @@
 import CoreSSH
+import Foundation
 import Observation
 import Persistence
 

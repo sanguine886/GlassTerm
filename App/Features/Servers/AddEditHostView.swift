@@ -32,30 +32,30 @@ struct AddEditHostView: View {
                         GlassCard {
                             VStack(alignment: .leading, spacing: GlassSpacing.md) {
                                 fieldLabel("host.name")
-                                TextField(Text("host.name.placeholder"), text: $name)
+                                TextField("host.name.placeholder", text: $name)
                                     .textFieldStyle(.roundedBorder)
                                     .accessibilityIdentifier("host.field.name")
 
                                 fieldLabel("host.address")
-                                TextField(Text("host.address.placeholder"), text: $hostname)
+                                TextField("host.address.placeholder", text: $hostname)
                                     .textFieldStyle(.roundedBorder)
                                     .textInputAutocapitalization(.never)
                                     .autocorrectionDisabled()
                                     .accessibilityIdentifier("host.field.address")
 
                                 fieldLabel("host.port")
-                                TextField(Text("host.port.placeholder"), text: $portText)
+                                TextField("host.port.placeholder", text: $portText)
                                     .textFieldStyle(.roundedBorder)
                                     .keyboardType(.numberPad)
 
                                 fieldLabel("host.username")
-                                TextField(Text("host.username.placeholder"), text: $username)
+                                TextField("host.username.placeholder", text: $username)
                                     .textFieldStyle(.roundedBorder)
                                     .textInputAutocapitalization(.never)
                                     .autocorrectionDisabled()
 
                                 fieldLabel("host.group")
-                                TextField(Text("host.group.placeholder"), text: $group)
+                                TextField("host.group.placeholder", text: $group)
                                     .textFieldStyle(.roundedBorder)
                             }
                         }
@@ -63,7 +63,7 @@ struct AddEditHostView: View {
                         GlassCard {
                             VStack(alignment: .leading, spacing: GlassSpacing.md) {
                                 fieldLabel("host.auth.method")
-                                Picker(Text("host.auth.method"), selection: $authKind) {
+                                Picker("host.auth.method", selection: $authKind) {
                                     Text("host.auth.password").tag(HostAuthKind.password)
                                     Text("host.auth.key").tag(HostAuthKind.privateKey)
                                 }
@@ -71,7 +71,7 @@ struct AddEditHostView: View {
 
                                 switch authKind {
                                 case .password:
-                                    SecureField(Text("host.auth.password.placeholder"), text: $password)
+                                    SecureField("host.auth.password.placeholder", text: $password)
                                         .textFieldStyle(.roundedBorder)
                                         .accessibilityIdentifier("host.field.password")
                                 case .privateKey:
@@ -111,7 +111,7 @@ struct AddEditHostView: View {
                     }
                 )
             ) {
-                Button(Text("common.ok"), role: .cancel) {}
+                Button("common.ok", role: .cancel) {}
             } message: {
                 Text(errorMessage ?? "")
             }
@@ -139,7 +139,7 @@ struct AddEditHostView: View {
                 .font(.caption)
                 .foregroundStyle(Color.glassSecondaryText)
         }
-        SecureField(Text("host.auth.passphrase.placeholder"), text: $passphrase)
+        SecureField("host.auth.passphrase.placeholder", text: $passphrase)
             .textFieldStyle(.roundedBorder)
     }
 

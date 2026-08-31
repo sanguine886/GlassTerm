@@ -1,5 +1,6 @@
 import CoreSSH
 import Persistence
+import SwiftData
 import SwiftUI
 
 @main
