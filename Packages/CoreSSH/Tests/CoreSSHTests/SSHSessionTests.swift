@@ -244,4 +244,107 @@ final class SSHSessionTests: XCTestCase {
             XCTAssertEqual(error, .sessionNotConnected)
         }
     }
+
+    func testRequestShellWithoutConnectionThrows() async throws {
+        let session = makeSession()
+        do {
+            _ = try await session.requestShell(cols: 80, rows: 24)
+            XCTFail("Expected sessionNotConnected")
+        } catch let error as SSHError {
+            XCTAssertEqual(error, .sessionNotConnected)
+        }
+    }
+
+    func testConnectTwiceIsNoOp() async throws {
+        let session = makeSession()
+        try await session.connect(config: makeConfig(), knownHosts: store)
+        let attemptsAfterFirst = state.attempts
+        try await session.connect(config: makeConfig(), knownHosts: store)
+        XCTAssertEqual(state.attempts, attemptsAfterFirst, "Second connect must not open another transport")
+    }
+
+    func testStateStreamEmitsInitialAndConnected() async throws {
+        let session = makeSession()
+        let stream = await session.stateStream()
+        var iterator = stream.makeAsyncIterator()
+
+        let initial = await iterator.next()
+        XCTAssertEqual(initial, .idle)
+
+        try await session.connect(config: makeConfig(), knownHosts: store)
+        let deadline = Date().addingTimeInterval(2)
+        var seenConnected = false
+        while let emitted = await iterator.next(), Date() < deadline {
+            if emitted == .connected {
+                seenConnected = true
+                break
+            }
+        }
+        XCTAssertTrue(seenConnected, "State stream never reported .connected")
+    }
+
+    // MARK: - mapHostKeyError translation (UI-facing TOFU errors)
+
+    private func runValidation(
+        on validator: TOFUHostKeyValidator,
+        against store: KnownHostsStore
+    ) throws {
+        let key = try NIOSSHPublicKey(openSSHPublicKey: FakeState.fixtureOpenSSHPublicKey)
+        let promise = state.eventLoop.makePromise(of: Void.self)
+        validator.validateHostKey(hostKey: key, validationCompletePromise: promise)
+    }
+
+    func testMapHostKeyErrorNewHost() throws {
+        let unpinned = KnownHostsStore(storeURL: nil)
+        let validator = TOFUHostKeyValidator(knownHosts: unpinned, hostIdentifier: "host:22")
+        try runValidation(on: validator, against: unpinned)
+
+        let mapped = SSHSession.mapHostKeyError(
+            SSHError.hostKeyVerificationDeclined,
+            validator: validator, knownHosts: unpinned, config: makeConfig()
+        )
+        guard case let .hostKeyUnknown(fingerprint) = mapped else {
+            return XCTFail("Expected hostKeyUnknown, got \(mapped)")
+        }
+        XCTAssertEqual(fingerprint, FakeState.fixtureFingerprint)
+    }
+
+    func testMapHostKeyErrorChanged() throws {
+        let impostor = HostKeyFingerprint(algorithm: "ssh-ed25519", sha256: "SHA256:tt45JPYHSqQ1kvgOPMu5tO7lQT+ccsZZS0Z7AitT7pM")
+        store.trust(hostIdentifier: "host:22", fingerprint: impostor)
+        let validator = TOFUHostKeyValidator(knownHosts: store, hostIdentifier: "host:22")
+        try runValidation(on: validator, against: store)
+
+        let mapped = SSHSession.mapHostKeyError(
+            SSHError.hostKeyVerificationDeclined,
+            validator: validator, knownHosts: store, config: makeConfig()
+        )
+        guard case let .hostKeyChanged(pinned, presented) = mapped else {
+            return XCTFail("Expected hostKeyChanged, got \(mapped)")
+        }
+        XCTAssertEqual(pinned, impostor)
+        XCTAssertEqual(presented, FakeState.fixtureFingerprint)
+    }
+
+    func testMapHostKeyErrorTrustedHostBecomesConnectionFailure() throws {
+        let validator = TOFUHostKeyValidator(knownHosts: store, hostIdentifier: "host:22")
+        try runValidation(on: validator, against: store)
+
+        let mapped = SSHSession.mapHostKeyError(
+            SSHError.hostKeyVerificationDeclined,
+            validator: validator, knownHosts: store, config: makeConfig()
+        )
+        guard case .connectionFailed = mapped else {
+            return XCTFail("Expected connectionFailed, got \(mapped)")
+        }
+    }
+
+    func testMapHostKeyErrorPassesThroughNonDeclined() {
+        let validator = TOFUHostKeyValidator(knownHosts: store, hostIdentifier: "host:22")
+        let original = SSHError.sessionNotConnected
+        let mapped = SSHSession.mapHostKeyError(
+            original, validator: validator, knownHosts: store, config: makeConfig()
+        )
+        XCTAssertEqual(mapped, original)
+    }
 }
