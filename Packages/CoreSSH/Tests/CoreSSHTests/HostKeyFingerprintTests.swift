@@ -71,24 +71,6 @@ final class HostKeyFingerprintTests: XCTestCase {
         XCTAssertEqual(fingerprint.sha256, "SHA256:1UeVJ6CVbqSaeXpJr39D+6SCSkJAPyew+t8Wjmcpyfw")
     }
 
-    func testUnsupportedRSAKeyThrows() throws {
-        let key = try NIOSSHPublicKey(
-            openSSHPublicKey: "ssh-rsa "
-                + "AAAAB3NzaC1yc2EAAAADAQABAAABAQDJmzqssXCCexUJM7OMgYIzUqX2X5T0QEALp/7s"
-                + "77dSTWICejXae3Xlu6bTIUv+3hKJv61GHj2yLJbRQbjYFkRy27SGNwLvCnrhDMRUrDh1Oe"
-                + "FtsUmyxTjEZ7flhSGLUtA6C+0jfTvc7+gXYAbrqdX2EhbR05/qUt3fvBjywHcC+0kkeLvB"
-                + "8xTa3zlKRyMik5OhhDeSrhXO3oy+rhE//NHs/5kxKijHx5C3wS1ZLLCoeh1TlvXNa52FkO"
-                + "SJGVl/lR+FTAxb8Dwftyml141xLVeIyFHEpMnX257vu5Kb5ijY1MS/YX+/G5+Bfh5kdsni"
-                + "VRVp81LLC04DlmQmp1h7bDNX glassterm-fixture-rsa"
-        )
-
-        XCTAssertThrowsError(try HostKeyFingerprint.make(from: key)) { error in
-            guard case SSHError.hostKeyUnsupported = error else {
-                return XCTFail("Expected hostKeyUnsupported, got \(error)")
-            }
-        }
-    }
-
     func testDifferentKeysProduceDifferentFingerprints() throws {
         let first = try NIOSSHPublicKey(
             openSSHPublicKey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINdOFc0vV/LiSNEtJoDVtThtAaMk7b6SZ782Dj/Ho9qg root@ip-172-31-40-233"

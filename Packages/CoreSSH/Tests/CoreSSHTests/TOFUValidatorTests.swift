@@ -1,5 +1,6 @@
 import CoreSSH
 import NIO
+import NIOConcurrencyHelpers
 import NIOCore
 import NIOSSH
 import XCTest
@@ -60,21 +61,40 @@ final class TOFUValidatorTests: XCTestCase {
         let key = try makeServerKey()
         validator.validateHostKey(hostKey: key, validationCompletePromise: promise)
 
-        var outcome: Result<Void, Error>?
+        let outcomeBox = OutcomeBox()
         let expectation = expectation(description: "validation completes")
         promise.futureResult.whenComplete { value in
-            outcome = value
+            outcomeBox.set(value)
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 5)
 
-        switch outcome {
+        switch outcomeBox.get() {
         case .success:
             return (true, nil)
         case let .failure(error):
             return (false, error)
         case nil:
             return (false, nil)
+        }
+    }
+}
+
+/// Lock-protected single-value box so the NIO completion callback (a
+/// `@Sendable` closure) can hand the result back without captured-var mutation.
+private final class OutcomeBox: @unchecked Sendable {
+    private let lock = NIOLock()
+    private var value: Result<Void, Error>?
+
+    func set(_ newValue: Result<Void, Error>) {
+        lock.withLock {
+            value = newValue
+        }
+    }
+
+    func get() -> Result<Void, Error>? {
+        lock.withLock {
+            value
         }
     }
 }

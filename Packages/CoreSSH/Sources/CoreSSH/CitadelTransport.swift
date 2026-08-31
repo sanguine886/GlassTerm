@@ -174,12 +174,20 @@ public final class CitadelTransport: SSHTransport, @unchecked Sendable {
         case let .privateKey(pem, passphrase):
             let decryption = passphrase.flatMap { Data($0.utf8) }
             let trimmed = pem.trimmingCharacters(in: .whitespacesAndNewlines)
-            if trimmed.contains("BEGIN OPENSSH PRIVATE KEY") || trimmed.contains("ssh-ed25519") {
+            if trimmed.contains("ssh-ed25519") {
                 do {
                     let key = try Curve25519.Signing.PrivateKey(sshEd25519: pem, decryptionKey: decryption)
                     return .ed25519(username: config.username, privateKey: key)
                 } catch {
                     throw SSHError.keyParseFailed(error.localizedDescription)
+                }
+            }
+            if trimmed.contains("BEGIN OPENSSH PRIVATE KEY") {
+                // OpenSSH container. A passphrase-encrypted ed25519 key hides
+                // its "ssh-ed25519" marker, so probe ed25519 first; a failure
+                // means this is an RSA key (or wrong passphrase) — fall through.
+                if let key = try? Curve25519.Signing.PrivateKey(sshEd25519: pem, decryptionKey: decryption) {
+                    return .ed25519(username: config.username, privateKey: key)
                 }
             }
             do {

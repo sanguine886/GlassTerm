@@ -54,34 +54,34 @@ final class KeyParsingTests: XCTestCase {
         }
     }
 
-    private let rsaPKCS1PEM = """
-    -----BEGIN RSA PRIVATE KEY-----
-    MIIEpAIBAAKCAQEAqzFRjsQGHZ33MLIbbVHNKx/ppZDlsuOg3brtQsOuiRc+sFV+
-    tvf+z4cmb9LfdbKWnbDqmV71TquRrb3VQN5GtA7VMrQ2guqnZ2s7LheEIBCh0UnI
-    J87uiqawAbgV+Ob5pbtFSPzrmjit2CLaMghD5KrsT1Pyg+r433nFFqid/YQsmFWV
-    EciCDdWSokjy8tZkUWzb2cHAxwowdDOxeoF+sbF8X+u4FIkKIwT6IoQcaI1RH+f+
-    dS0Xtk3ZPjiNtGGAWoMmXH3a3qCf4si+Oh5HnuMod60SyNdMvNuVp+khHyTE/aat
-    7qbfGQonWvRx+h0Z9uIaaYsKS4Ktaqjdimx7fQIDAQABAoIBABd4tBdwbew6n80n
-    5lXHPOuYPQcrxiqQRhqQif446SG3s6smlbCNcPzQKWd0kJnJChiFzKyJlfWa1Wbu
-    W6JAt43xaK7CgaTSenBWBe+sXrusvBr/VDeNCiytbP1XWX/eX0UnV3kJ4F2tPryf
-    Dq6EbpaYDr1To7ENkuDFB84zATJkZpN8M+wOpz83tCtcsrp5qiMkIFhX0J14iLe3
-    HkVptTOkhvCKMBvtufNtD2fUN2AOXzhYlQxGoG1aA3ESnFpYaBObYJmKdvYc/JYE
-    QlKv7R0jFa9epAjLsAzlw2sM5SYlf9ilf6kpfk7lvzCHQTkKrypp15FBUaSftrbB
-    zWi62BECgYEA6ysd1z8EzulnUuPYz2H32Z8yaT70L0HGy4vkVIPRlENSQuesdA17
-    zHVOmj4+fRN12xbmSuruwbsqJrcgExxZOm7eXVW1QiGUAk93pYM8CjXIWlkRQ3jw
-    /2KrsdtAUuqh1R+V+y2fQqxRLTuWjqvdu0JsBuG6XuaTnMpOjPNMoMUCgYEAultu
-    i5oGFn3n7zpyMAorhP1K+POo6rOR78pxS6ekLKlE7PFXenDXT+h1jLInarP1G6v9
-    xc5uH2TltVE7rkp1v99+bm31o8peuBJGMHZudfZMFZMcUXjZITfj1xHPj5it5o+q
-    Ce4N6ILi8Nr2iDMHFNOhI9amsR9ZqovagJwhq1kCgYBhQhO1UXrLl/wDa/fezMWU
-    WyKeJEsYwDtXMyPbUCj9CFqdEPNhi7IHfPxlDhkJ4WJ8mZvkoATeWmm0WUgKn07H
-    u9J7B1dPYlO0IOl6qivKjTOvKebZ4MrK1CPuCp8vq5oCam2808Fp8Zog+uPpXWr2
-    ZyIGNpS9at7hmUmjQXwPgQKBgQCUP34OUiX7qIdkeQMzkjOSpQkKSJOcueMjddFx
-    FNh2quVo9IjZn4C5UbyJg4P1z1jyfXzw6coS8WoHNqsaeKN5Uuq6IIFjne6B0g/C
-    J8Sx1JAsLY4+hbt9QH/grIuIuTXGD41+PsETsWOlpRqvuKAugjhTUUPj7YOgN4dH
-    /myOaQKBgQCMZJg7jixI+JBjVuC1F9LxdliKyF9wd8aaQJjyVZPsWyhieBQTu2jv
-    CYEzVaEjKPC8LEJXaL/PmKmOjsJzht33M+s4d+1/0tiifutweqYrR97DQr01LWd/
-    NZBUwhh9ajX2nzj5Kx43MRHaWYob9ez+CNhBeU4uefgnj3FvOa3HAg==
-    -----END RSA PRIVATE KEY-----
+    private let rsaOpenSSHPEM = """
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABFwAAAAdzc2gtcn
+    NhAAAAAwEAAQAAAQEAyZs6rLFwgnsVCTOzjIGCM1Kl9l+U9EBAC6f+7O+3Uk1iAno12nt1
+    5bum0yFL/t4Sib+tRh49siyW0UG42BZEctu0hjcC7wp64QzEVKw4dTnhbbFJssU4xGe35Y
+    Uhi1LQOgvtI3073O/oF2AG66nV9hIW0dOf6lLd37wY8sB3AvtJJHi7wfMU2t85SkcjIpOT
+    oYQ3kq4Vzt6Mvq4RP/zR7P+ZMSoox8eQt8EtWSywqHodU5b1zWudhZDkiRlZf5UfhUwMW/
+    A8H7cppdeNcS1XiMhRxKTJ19ue77uSm+Yo2NTEv2F/vxufgX4eZHbJ4lUVafNSywtOA5Zk
+    JqdYe2wzVwAAA8jcE4di3BOHYgAAAAdzc2gtcnNhAAABAQDJmzqssXCCexUJM7OMgYIzUq
+    X2X5T0QEALp/7s77dSTWICejXae3Xlu6bTIUv+3hKJv61GHj2yLJbRQbjYFkRy27SGNwLv
+    CnrhDMRUrDh1OeFtsUmyxTjEZ7flhSGLUtA6C+0jfTvc7+gXYAbrqdX2EhbR05/qUt3fvB
+    jywHcC+0kkeLvB8xTa3zlKRyMik5OhhDeSrhXO3oy+rhE//NHs/5kxKijHx5C3wS1ZLLCo
+    eh1TlvXNa52FkOSJGVl/lR+FTAxb8Dwftyml141xLVeIyFHEpMnX257vu5Kb5ijY1MS/YX
+    +/G5+Bfh5kdsniVRVp81LLC04DlmQmp1h7bDNXAAAAAwEAAQAAAQAe62w/HRg/eBIHWcMR
+    QFw6ySkD6q/acATX5M7aVtTQ+LuYhqwTaI5HNWrwrtwhaBIEHKi9/BhZPFvFwc8lcPDULs
+    b2iKGuDfeU5BOJAEAea8nw5q5XY8ZWNP6wDaV8i9m8n/n20JepmwUHmhDQUY6rkSWnzk2U
+    hLCw8NULXKJEC1vNs28XIYWGYB9NfJ1qzUdEWkhlo620Gmp1gKu5nukt56DWuHotNzEz1+
+    owQFRn39pUrQ9jxJmE25NAe/pmmYQXm0HjNDA9yU5AddBU/6202q1DcrqHAz7+I8t6wX6R
+    Qr2CLkSqg9xumrvw6ry+6IjsYotcwaUGXiQHFgus8Qd9AAAAgQDBCz1lhm4eIY/CEYHNtl
+    fe7fwOshpci5VDyusLGkSqKHol6FYIG5Y2ZWEuS4QJ4p0d1k88gnQnpqeIisACZ6yu4chH
+    ssWcb2Pq+BbXlwJklYqlEAKAZirErxltox5jCkPYDDnmYuPhOuyEedC8+U+kBAcpR1brie
+    nu4N4LY5epGQAAAIEA9VrhvX/8CCcw1hD8n6psSc8dQmivKdT+yPKI7TU4oCuEnRRtweI7
+    CVyPLrqp3gEcwseaIVLPXQ5M/FR7P7z3e6jr/AyK4gj6Hc0hUQ3pqA/4Dm+9EC9eWeWQ9L
+    1e4RLWoo7ra07PIq5TislbKCx2ardR4LABv7lp5gu9LMA+4f0AAACBANJacDZh+SwgJx9A
+    POcHOF0xRoUZdJ8FT6j4sUcUtow2OKn/Ywb25sC/O6NodJXnRAgXnXygK3+smcIgeUQSZb
+    3yeVnb7EU76h0ovXup2Eh2lWqkE+/dPijw6hlT9y6BVv+31YOu2gP1mfEM4F9Q1TnfleBO
+    JXR2klx6uKfE0hDjAAAAC2ZpeHR1cmUtcnNhAQIDBAUGBw==
+    -----END OPENSSH PRIVATE KEY-----
     """
 
     func testPasswordAuthMethodBuilt() throws {
@@ -103,9 +103,9 @@ final class KeyParsingTests: XCTestCase {
         }
     }
 
-    func testParsesRSAPKCS1Key() throws {
+    func testParsesRSAOpenSSHKey() throws {
         let method = try CitadelTransport.authenticationMethod(
-            for: SSHHostConfig(host: "h", username: "u", auth: .privateKey(pem: rsaPKCS1PEM, passphrase: nil))
+            for: SSHHostConfig(host: "h", username: "u", auth: .privateKey(pem: rsaOpenSSHPEM, passphrase: nil))
         )
         XCTAssertNotNil(method)
     }
