@@ -134,7 +134,7 @@ public actor SSHSession {
     }
 
     private func openTransport(config: SSHHostConfig, validator: TOFUHostKeyValidator) async throws {
-        let fresh = transportMaker.makeTransport()
+        var fresh = transportMaker.makeTransport()
         fresh.onDrop = { [weak self] in
             Task { await self?.handleUnexpectedDrop() }
         }

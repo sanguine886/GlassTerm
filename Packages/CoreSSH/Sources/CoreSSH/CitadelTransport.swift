@@ -16,6 +16,14 @@ public struct ShellStdin: Sendable {
     private let writeHandler: @Sendable (Data) async throws -> Void
     private let resizeHandler: @Sendable (Int, Int) async throws -> Void
 
+    public init(
+        writeHandler: @escaping @Sendable (Data) async throws -> Void,
+        resizeHandler: @escaping @Sendable (Int, Int) async throws -> Void
+    ) {
+        self.writeHandler = writeHandler
+        self.resizeHandler = resizeHandler
+    }
+
     public func write(_ data: Data) async throws {
         try await writeHandler(data)
     }
@@ -52,7 +60,7 @@ public final class CitadelTransport: SSHTransport, @unchecked Sendable {
     // SSHClient is internally synchronized and only touched from this class;
     // confinement is enforced by SSHSession (one transport per session).
     private var client: SSHClient?
-    private let clientLock = NSLock()
+    private let clientLock = NIOLock()
     private let dropBox = CallbackBox()
 
     public var onDrop: @Sendable () -> Void {
@@ -71,14 +79,14 @@ public final class CitadelTransport: SSHTransport, @unchecked Sendable {
             host: config.host,
             port: config.port,
             authenticationMethod: method,
-            hostKeyValidator: validator,
+            hostKeyValidator: .custom(validator),
             reconnect: .never,
             connectTimeout: .seconds(15)
         )
         client.onDisconnect { [dropBox] in dropBox.get()?() }
-        clientLock.lock()
-        self.client = client
-        clientLock.unlock()
+        clientLock.withLock {
+            self.client = client
+        }
     }
 
     public func run(_ command: String) async throws -> String {
@@ -122,11 +130,11 @@ public final class CitadelTransport: SSHTransport, @unchecked Sendable {
         try await opened.wait()
 
         let stdin = ShellStdin(
-            write: { data in
+            writeHandler: { data in
                 guard let writer = writerBox.get() else { throw SSHError.sessionNotConnected }
                 try await writer.write(ByteBuffer(data: data))
             },
-            resize: { newCols, newRows in
+            resizeHandler: { newCols, newRows in
                 guard let writer = writerBox.get() else { throw SSHError.sessionNotConnected }
                 try await writer.changeSize(cols: newCols, rows: newRows, pixelWidth: 0, pixelHeight: 0)
             }
@@ -135,19 +143,20 @@ public final class CitadelTransport: SSHTransport, @unchecked Sendable {
     }
 
     public func close() async {
-        clientLock.lock()
-        let stale = client
-        client = nil
-        clientLock.unlock()
+        let stale = clientLock.withLock { () -> SSHClient? in
+            let stale = client
+            client = nil
+            return stale
+        }
         try? await stale?.close()
     }
 
     // MARK: - Internals
 
     private func currentClient() -> SSHClient? {
-        clientLock.lock()
-        defer { clientLock.unlock() }
-        return client
+        clientLock.withLock {
+            client
+        }
     }
 
     private func requireClient() throws -> SSHClient {
@@ -160,7 +169,7 @@ public final class CitadelTransport: SSHTransport, @unchecked Sendable {
     static func authenticationMethod(for config: SSHHostConfig) throws -> SSHAuthenticationMethod {
         switch config.auth {
         case let .password(password):
-            .passwordBased(username: config.username, password: password)
+            return .passwordBased(username: config.username, password: password)
         case let .privateKey(pem, passphrase):
             let decryption = passphrase.flatMap { Data($0.utf8) }
             let trimmed = pem.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -185,80 +194,87 @@ public final class CitadelTransport: SSHTransport, @unchecked Sendable {
 /// Thread-safe holder for the escapee `TTYStdinWriter` (NIO channel writes are
 /// internally event-loop hopped, so cross-actor use is safe).
 final class TTYWriterBox: @unchecked Sendable {
-    private let lock = NSLock()
+    private let lock = NIOLock()
     private var writer: Citadel.TTYStdinWriter?
 
     func set(_ writer: Citadel.TTYStdinWriter) {
-        lock.lock()
-        self.writer = writer
-        lock.unlock()
+        lock.withLock {
+            self.writer = writer
+        }
     }
 
     func get() -> Citadel.TTYStdinWriter? {
-        lock.lock()
-        defer { lock.unlock() }
-        return writer
+        lock.withLock {
+            writer
+        }
     }
 }
 
 /// One-shot continuation gate signaled once the shell channel is live.
 final class OpenSignal: @unchecked Sendable {
-    private let lock = NSLock()
+    private let lock = NIOLock()
     private var continuation: CheckedContinuation<Void, Error>?
     private var settled = false
 
     /// Resumes (and consumes) any pending waiter; safe to call multiple times.
     var settleIfFirst: Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        return !settled
+        lock.withLock {
+            if settled {
+                false
+            } else {
+                settled = true
+                true
+            }
+        }
     }
 
     func wait() async throws {
         try await withCheckedThrowingContinuation { continuation in
-            lock.lock()
-            if settled {
-                lock.unlock()
-                continuation.resume()
-                return
+            lock.withLock {
+                if settled {
+                    self.continuation = nil
+                    continuation.resume()
+                } else {
+                    self.continuation = continuation
+                }
             }
-            self.continuation = continuation
-            lock.unlock()
         }
     }
 
     func succeed() {
-        lock.lock()
-        let pending = continuation
-        continuation = nil
-        settled = true
-        lock.unlock()
+        let pending = lock.withLock { () -> CheckedContinuation<Void, Error>? in
+            let pending = continuation
+            continuation = nil
+            settled = true
+            return pending
+        }
         pending?.resume()
     }
 
     func fail(_ error: Error) {
-        lock.lock()
-        let pending = continuation
-        continuation = nil
-        settled = true
-        lock.unlock()
+        let pending = lock.withLock { () -> CheckedContinuation<Void, Error>? in
+            let pending = continuation
+            continuation = nil
+            settled = true
+            return pending
+        }
         pending?.resume(throwing: error)
     }
 }
 
 final class CallbackBox: @unchecked Sendable {
-    private let lock = NSLock()
+    private let lock = NIOLock()
     private var callback: (@Sendable () -> Void)?
 
-    func set(_ callback: @Sendable () -> Void) {
-        lock.lock()
-        self.callback = callback
-        lock.unlock()
+    func set(_ callback: @escaping @Sendable () -> Void) {
+        lock.withLock {
+            self.callback = callback
+        }
     }
 
     func get() -> (@Sendable () -> Void)? {
-        lock.lock()
-        defer { lock.unlock() }
-        return callback
+        lock.withLock {
+            callback
+        }
     }
 }

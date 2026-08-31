@@ -41,18 +41,18 @@ public final class TOFUHostKeyValidator: NIOSSHClientServerAuthenticationDelegat
 
 /// Thread-safe single-value box for the last presented fingerprint.
 final class FingerprintBox: @unchecked Sendable {
-    private let lock = NSLock()
+    private let lock = NIOLock()
     private var value: HostKeyFingerprint?
 
     func set(_ fingerprint: HostKeyFingerprint) {
-        lock.lock()
-        value = fingerprint
-        lock.unlock()
+        lock.withLock {
+            value = fingerprint
+        }
     }
 
     func get() -> HostKeyFingerprint? {
-        lock.lock()
-        defer { lock.unlock() }
-        return value
+        lock.withLock {
+            value
+        }
     }
 }
