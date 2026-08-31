@@ -1,5 +1,6 @@
 import CoreSSH
 import NIO
+import NIOCore
 import NIOSSH
 import XCTest
 
@@ -45,7 +46,7 @@ final class FakeTransport: SSHTransport, @unchecked Sendable {
         return "ok:\(command)"
     }
 
-    func requestShell(cols _: Int, rows _: Int) async throws -> ShellStreams {
+    func requestShell(cols: Int, rows: Int) async throws -> ShellStreams {
         throw SSHError.sessionNotConnected
     }
 
@@ -189,8 +190,7 @@ final class SSHSessionTests: XCTestCase {
         let fake = try XCTUnwrap(live as? FakeTransport)
         fake.simulateDrop()
 
-        var deadline: Date
-        deadline = Date().addingTimeInterval(5)
+        let deadline = Date().addingTimeInterval(5)
         while await session.state != .connected, Date() < deadline {
             try await Task.sleep(for: .milliseconds(20))
         }

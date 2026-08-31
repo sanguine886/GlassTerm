@@ -24,9 +24,9 @@ public enum SSHError: Error, Equatable, Sendable {
 extension SSHError: LocalizedError {
     public var errorDescription: String? {
         switch self {
-        case let ():
+        case .invalidConfiguration(let detail):
             "Invalid host configuration: \(detail)"
-        case let ():
+        case .connectionFailed(let detail):
             "Connection failed: \(detail)"
         case .authenticationFailed:
             "Authentication failed. Check username, password or key."
@@ -38,13 +38,13 @@ extension SSHError: LocalizedError {
             "Operation cancelled."
         case .sessionNotConnected:
             "Not connected."
-        case let ():
+        case .keyParseFailed(let detail):
             "Could not read the private key: \(detail)"
-        case let ():
+        case .hostKeyUnknown(let fingerprint):
             "Unknown host key. Fingerprint \(fingerprint.sha256)"
-        case let (, ):
+        case .hostKeyChanged(let pinned, let presented):
             "Host key changed! Pinned \(pinned.sha256), server now presents \(presented.sha256)."
-        case let ():
+        case .hostKeyUnsupported(let detail):
             "Unsupported host key: \(detail)"
         case .hostKeyVerificationDeclined:
             "Host key verification declined."

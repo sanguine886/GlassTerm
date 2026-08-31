@@ -153,7 +153,7 @@ struct AddEditHostView: View {
     }
 
     private func importKey(_ result: Result<[URL], Error>) {
-        guard case let .success(urls) = result, let url = urls.first else { return }
+        guard case .success(let urls) = result, let url = urls.first else { return }
         let secured = url.startAccessingSecurityScopedResource()
         defer {
             if secured {

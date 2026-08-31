@@ -1,0 +1,39 @@
+name: Format (manual)
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    name: Run swiftformat and emit patch
+    runs-on: macos-26
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install swiftformat
+        run: |
+          set -euo pipefail
+          command -v swiftformat >/dev/null 2>&1 || brew install swiftformat
+
+      - name: Format in place
+        run: |
+          set -euo pipefail
+          swiftformat . 2>&1 | tail -20 || true
+
+      - name: Emit diff patch
+        run: |
+          set -euo pipefail
+          git add -A
+          git diff --cached > format.patch || true
+          echo "--- patch size ---"
+          wc -l format.patch
+
+      - name: Upload patch
+        uses: actions/upload-artifact@v4
+        with:
+          name: format-patch
+          path: format.patch
+          retention-days: 7

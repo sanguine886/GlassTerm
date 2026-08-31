@@ -24,16 +24,16 @@ let package = Package(
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "Crypto", package: "swift-crypto"),
             ],
-            path: "Sources/CoreSSH",
+            path: "Sources/CoreSSH"
         ),
         .testTarget(
             name: "CoreSSHTests",
             dependencies: [
                 "CoreSSH",
                 .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "NIOSSH", package: "swift-nio-ssh"),
+                .product(name: "NIOSSH", package: "swift-nio-ssh")
             ],
-            path: "Tests/CoreSSHTests",
+            path: "Tests/CoreSSHTests"
         ),
     ],
 )

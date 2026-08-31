@@ -23,11 +23,13 @@ public struct ShellStdin: Sendable {
     public func resize(cols: Int, rows: Int) async throws {
         try await resizeHandler(cols, rows)
     }
+
 }
 
 public struct ShellStreams: Sendable {
     public let output: AsyncStream<ShellEvent>
     public let stdin: ShellStdin
+
 }
 
 /// One open SSH connection's capabilities. Implemented by `CitadelTransport`
@@ -87,7 +89,7 @@ public final class CitadelTransport: SSHTransport, @unchecked Sendable {
         return String(buffer: buffer)
     }
 
-    public func requestShell(cols _: Int, rows _: Int) async throws -> ShellStreams {
+    public func requestShell(cols: Int, rows: Int) async throws -> ShellStreams {
         let client = try requireClient()
 
         let (eventStream, continuation) = AsyncStream<ShellEvent>.makeStream(bufferingPolicy: .unbounded)
