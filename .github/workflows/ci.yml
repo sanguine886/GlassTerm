@@ -42,7 +42,10 @@ jobs:
       - name: CoreSSH engine tests (swift test)
         run: |
           set -euo pipefail
-          swift test --package-path Packages/CoreSSH --enable-code-coverage 2>&1
+          # --xccov-output-path: swift test on macOS otherwise emits only LLVM
+          # profdata, which the coverage gate (find *.xccovreport) cannot read.
+          swift test --package-path Packages/CoreSSH --enable-code-coverage \
+            --xccov-output-path Packages/CoreSSH/.build/codecov 2>&1
 
       - name: Coverage gate — CoreSSH ≥ 60% (ADR-0005)
         run: |
