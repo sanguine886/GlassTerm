@@ -1,5 +1,5 @@
-import XCTest
 @testable import TerminalKit
+import XCTest
 
 @MainActor
 final class SessionTabsTests: XCTestCase {

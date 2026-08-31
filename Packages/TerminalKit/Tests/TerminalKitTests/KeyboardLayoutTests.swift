@@ -1,5 +1,5 @@
-import XCTest
 @testable import TerminalKit
+import XCTest
 
 final class KeyboardLayoutTests: XCTestCase {
     func testDefaultLayoutHasCoreKeys() {

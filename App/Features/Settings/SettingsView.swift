@@ -41,10 +41,14 @@ struct SettingsView: View {
                 HStack {
                     Text("settings.terminal.size")
                     Spacer()
-                    Stepper("\(prefs.fontSize) pt", value: Binding(
-                        get: { prefs.fontSize },
-                        set: { prefs.saveSize($0) }
-                    ), in: TerminalFontSpec.sizeRange)
+                    Stepper(
+                        "\(prefs.fontSize) pt",
+                        value: Binding(
+                            get: { prefs.fontSize },
+                            set: { prefs.saveSize($0) }
+                        ),
+                        in: TerminalFontSpec.sizeRange
+                    )
                     .accessibilityIdentifier("settings.fontSize")
                 }
 

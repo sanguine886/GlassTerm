@@ -70,10 +70,17 @@ struct TerminalScreenView: View {
         } message: {
             Text("tmux.detected.body")
         }
-        .alert(Text("error.title"), isPresented: .init(
-            get: { errorMessage != nil },
-            set: { if !$0 { errorMessage = nil } }
-        )) {
+        .alert(
+            Text("error.title"),
+            isPresented: .init(
+                get: { errorMessage != nil },
+                set: {
+                    if !$0 {
+                        errorMessage = nil
+                    }
+                }
+            )
+        ) {
             Button("common.ok", role: .cancel) {}
         } message: {
             Text(errorMessage ?? "")
@@ -198,5 +205,5 @@ private struct TerminalViewWrapper: UIViewRepresentable {
         session.terminalView
     }
 
-    func updateUIView(_ uiView: TerminalView, context _: Context) {}
+    func updateUIView(_: TerminalView, context _: Context) {}
 }
