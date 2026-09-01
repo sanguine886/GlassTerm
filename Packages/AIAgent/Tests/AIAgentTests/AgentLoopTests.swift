@@ -93,6 +93,7 @@ final class AgentLoopTests: XCTestCase {
         let audit: InMemoryAuditLog
     }
 
+    @MainActor
     private func makeLoop(
         script: [FakeChatProvider.Response],
         host: FakeHostSession = FakeHostSession(),
@@ -104,7 +105,7 @@ final class AgentLoopTests: XCTestCase {
         var registry = AgentToolRegistry(definitions: AgentToolRegistry.defaultToolDefinitions)
         // Register a fake executor for run_command so the loop can execute it.
         registry.register(
-            ToolDefinition(name: "run_command", description: "run a command", parameters: JSONValue.object(properties: [:]), isReadonly: false),
+            ToolDefinition(name: "run_command", description: "run a command", parameters: JSONSchemaBuilder.object(properties: [:]), isReadonly: false),
             executor: FakeToolExecutor(output: "fake output")
         )
         let decider = ApprovalDecider()
@@ -121,6 +122,7 @@ final class AgentLoopTests: XCTestCase {
         return Fixture(loop: loop, provider: provider, host: host, audit: audit)
     }
 
+    @MainActor
     func testAlwaysAskSurfacesApprovalCard() async throws {
         let call = AssistantToolCall(id: "1", name: "run_command", argumentsJSON: #"{"command":"ls -la /tmp","safe_to_run":false}"#)
         let fixture = makeLoop(script: [.init(text: "let me list", toolCall: call)])
@@ -131,6 +133,7 @@ final class AgentLoopTests: XCTestCase {
         XCTAssertEqual(turn.proposal?.classification.verdict, .safe)
     }
 
+    @MainActor
     func testApproveThenToolRunsAndFinishes() async throws {
         let call = AssistantToolCall(id: "2", name: "run_command", argumentsJSON: #"{"command":"df -h","safe_to_run":true}"#)
         let fixture = makeLoop(
@@ -157,6 +160,7 @@ final class AgentLoopTests: XCTestCase {
         XCTAssertEqual(runs, ["df -h"])
     }
 
+    @MainActor
     func testEditedCommandIsReclassifiedBeforeRun() async throws {
         let call = AssistantToolCall(id: "3", name: "run_command", argumentsJSON: #"{"command":"ls","safe_to_run":true}"#)
         let fixture = makeLoop(
@@ -178,6 +182,7 @@ final class AgentLoopTests: XCTestCase {
         XCTAssertTrue(runs.isEmpty, "dangerous edit must NOT execute")
     }
 
+    @MainActor
     func testRejectThenModelContinues() async throws {
         let call = AssistantToolCall(id: "4", name: "run_command", argumentsJSON: #"{"command":"rm x","safe_to_run":true}"#)
         let fixture = makeLoop(
@@ -203,6 +208,7 @@ final class AgentLoopTests: XCTestCase {
         XCTAssertTrue(runs.isEmpty)
     }
 
+    @MainActor
     func testKillSwitchStopsExecution() async throws {
         let call = AssistantToolCall(id: "5", name: "run_command", argumentsJSON: #"{"command":"sleep 100","safe_to_run":false}"#)
         let fixture = makeLoop(
@@ -219,6 +225,7 @@ final class AgentLoopTests: XCTestCase {
         XCTAssertEqual(phase, .cancelledByUser)
     }
 
+    @MainActor
     func testDangerousCommandIsBlockedByEveryStrategy() async throws {
         let call = AssistantToolCall(id: "6", name: "run_command", argumentsJSON: #"{"command":"rm -rf /","safe_to_run":true}"#)
         for strategy in [ApprovalStrategy.alwaysAsk, .autoReview, .readOnly] {

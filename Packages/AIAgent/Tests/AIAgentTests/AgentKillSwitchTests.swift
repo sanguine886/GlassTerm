@@ -22,11 +22,14 @@ final class AgentKillSwitchTests: XCTestCase {
         let token = AgentCancellationToken()
         let box = TriggerBox()
         await token.register { await box.bump() }
-        await XCTAssertFalse(token.isCancelled)
+        let notCancelled = await token.isCancelled
+        XCTAssertFalse(notCancelled)
         await token.cancel()
         await pollUntilCount(box, equals: 1)
-        await XCTAssertEqual(box.count, 1)
-        await XCTAssertTrue(token.isCancelled)
+        let firedCount = await box.count
+        XCTAssertEqual(firedCount, 1)
+        let cancelledNow = await token.isCancelled
+        XCTAssertTrue(cancelledNow)
     }
 
     func testUnregisteredHandlerIsNotFiredOnCancel() async {
@@ -38,8 +41,10 @@ final class AgentKillSwitchTests: XCTestCase {
         await token.unregister(id)
         await token.cancel()
         try? await Task.sleep(for: .milliseconds(50))
-        await XCTAssertEqual(box.count, 0)
-        await XCTAssertTrue(token.isCancelled)
+        let count = await box.count
+        XCTAssertEqual(count, 0)
+        let isCancelled = await token.isCancelled
+        XCTAssertTrue(isCancelled)
     }
 
     func testThrowIfCancelledThrowsAfterCancel() async {
@@ -63,7 +68,8 @@ final class AgentKillSwitchTests: XCTestCase {
         _ = await token.register { await box.bump() }
         await token.cancel()
         await pollUntilCount(box, equals: 2)
-        await XCTAssertEqual(box.count, 2)
+        let fired = await box.count
+        XCTAssertEqual(fired, 2)
     }
 
     func testCancelIsIdempotent() async {
@@ -74,6 +80,7 @@ final class AgentKillSwitchTests: XCTestCase {
         await pollUntilCount(box, equals: 1)
         await token.cancel()
         try? await Task.sleep(for: .milliseconds(30))
-        await XCTAssertEqual(box.count, 1)
+        let stillOnce = await box.count
+        XCTAssertEqual(stillOnce, 1)
     }
 }
