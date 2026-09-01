@@ -36,4 +36,19 @@ final class SFTPPathTests: XCTestCase {
         XCTAssertEqual(SFTPPath.normalized("etc"), "etc")
         XCTAssertEqual(SFTPPath.normalized("etc/passwd"), "etc/passwd")
     }
+
+    func testJoiningPreservesRootNested() {
+        XCTAssertEqual(SFTPPath.joining("/", "var/log"), "/var/log")
+        XCTAssertEqual(SFTPPath.joining("/a//", "b"), "/a/b")
+    }
+
+    func testParentOfNestedPreservesRoot() {
+        XCTAssertEqual(SFTPPath.parent(of: "/a/b/c/d"), "/a/b/c")
+        XCTAssertEqual(SFTPPath.parent(of: "/x"), "/")
+    }
+
+    func testDisplayNameRootAndSlash() {
+        XCTAssertEqual(SFTPPath.displayName(of: "/usr/bin/env"), "env")
+        XCTAssertEqual(SFTPPath.displayName(of: "/var"), "var")
+    }
 }
