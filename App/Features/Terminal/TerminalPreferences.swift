@@ -4,6 +4,7 @@ import TerminalKit
 
 /// User terminal preferences (font, size, theme) persisted in UserDefaults —
 /// explicitly NOT secrets, so UserDefaults is allowed (spec §6.3.1).
+@MainActor
 @Observable
 final class TerminalPreferences {
     static let shared = TerminalPreferences()

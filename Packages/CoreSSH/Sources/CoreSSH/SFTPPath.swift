@@ -46,6 +46,9 @@ public enum SFTPPath {
     /// Last path component (the sortable display name).
     public static func displayName(of path: String) -> String {
         let clean = normalized(path)
+        guard clean != "/" else {
+            return "/"
+        }
         guard let slash = clean.lastIndex(of: "/") else {
             return clean
         }

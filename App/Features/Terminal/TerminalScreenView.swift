@@ -1,5 +1,6 @@
 import CoreSSH
 import GlassKit
+import Persistence
 import SwiftUI
 import TerminalKit
 import UIKit
