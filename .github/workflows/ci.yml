@@ -61,7 +61,7 @@ jobs:
           if [ -z "${profdata}" ]; then
             echo "No profdata found for AIAgent"; exit 1
           fi
-          binary=$(find Packages/AIAgent/.build -type f -name "AIAgentPackageTests" | head -1)
+          binary=$(find Packages/AIAgent/.build -type f -name "AIAgentPackageTests" -not -path "*xctest*" | head -1)
           if [ -z "${binary}" ]; then
             echo "No AIAgentPackageTests binary found"; exit 1
           fi
