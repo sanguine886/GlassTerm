@@ -41,11 +41,13 @@ public struct ToolResult: Sendable {
         guard text.utf8.count > limitBytes else {
             return (text, false)
         }
-        var slice = String(text.utf8.prefix(limitBytes))
-        while !slice.utf8.isValid {
-            slice = String(slice.utf8.dropLast())
+        // Take the first `limitBytes` bytes, then back off until the prefix is
+        // valid UTF-8 (never split a multi-byte character).
+        var slice = text.utf8.prefix(limitBytes)
+        while String(bytes: slice, encoding: .utf8) == nil {
+            slice = slice.dropLast()
         }
-        return (slice, true)
+        return (String(bytes: slice, encoding: .utf8) ?? "", true)
     }
 }
 

@@ -55,6 +55,10 @@ public struct CommandClassification: Sendable, Equatable {
 /// first use and cached, since `NSRegularExpression` is thread-safe after the
 /// pattern has been compiled.
 public struct DangerousCommandClassifier: Sendable {
+    /// Empty initializer so other modules can spin up a default instance
+    /// (e.g. from a public default-argument value in ApprovalPolicy).
+    public init() {}
+
     /// Read-only command prefixes. A command starting with any of these
     /// (case-insensitively) is treated as read-only for approval policy.
     public static let readOnlyCommandPrefixes: [String] = [
@@ -249,7 +253,7 @@ public struct DangerousCommandClassifier: Sendable {
     // is thread-safe, so the static storage can be shared across the
     // value-type `Sendable` classifier.
 
-    private nonisolated(unsafe) static let lock = NSLock()
+    private static let lock = NSLock()
     private nonisolated(unsafe) static var cache: [String: NSRegularExpression] = [:]
 
     private static func regex(for id: String, pattern: String, options: NSRegularExpression.Options = [.caseInsensitive]) -> NSRegularExpression? {

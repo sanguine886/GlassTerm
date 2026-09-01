@@ -84,13 +84,22 @@ actor FakeHostSession: HostCommandSession {
 }
 
 final class AgentLoopTests: XCTestCase {
+    /// Bundles the loop fixture so `makeLoop` returns a single struct instead
+    /// of a 5-tuple (which swiftlint's `large_tuple` rejects).
+    private struct Fixture {
+        let loop: AgentLoop
+        let provider: FakeChatProvider
+        let host: FakeHostSession
+        let audit: InMemoryAuditLog
+    }
+
     private func makeLoop(
         script: [FakeChatProvider.Response],
         host: FakeHostSession = FakeHostSession(),
         strategy: ApprovalStrategy = .alwaysAsk,
         toolName _: String = "run_command",
         toolArguments _: [String: JSONValue] = ["command": .string("ls -la /tmp"), "safe_to_run": .boolean(false)]
-    ) -> (AgentLoop, FakeChatProvider, FakeHostSession, AgentToolRegistry, InMemoryAuditLog) {
+    ) -> Fixture {
         let provider = FakeChatProvider(script)
         var registry = AgentToolRegistry(definitions: AgentToolRegistry.defaultToolDefinitions)
         // Register a fake executor for run_command so the loop can execute it.
@@ -109,12 +118,13 @@ final class AgentLoopTests: XCTestCase {
             auditLog: audit,
             configuration: config
         )
-        return (loop, provider, host, registry, audit)
+        return Fixture(loop: loop, provider: provider, host: host, audit: audit)
     }
 
     func testAlwaysAskSurfacesApprovalCard() async throws {
         let call = AssistantToolCall(id: "1", name: "run_command", argumentsJSON: #"{"command":"ls -la /tmp","safe_to_run":false}"#)
-        let (loop, _, _, _, _) = makeLoop(script: [.init(text: "let me list", toolCall: call)])
+        let fixture = makeLoop(script: [.init(text: "let me list", toolCall: call)])
+        let loop = fixture.loop
         let turn = try await loop.requestTurn(prompt: "list tmp", context: AgentContext(userPrompt: "list tmp", host: HostSummary(alias: "host", workingPaths: ["/tmp"])))
         XCTAssertEqual(turn.proposal?.toolName, "run_command")
         XCTAssertEqual(turn.proposal?.classification.verdict, .safe)
@@ -122,13 +132,15 @@ final class AgentLoopTests: XCTestCase {
 
     func testApproveThenToolRunsAndFinishes() async throws {
         let call = AssistantToolCall(id: "2", name: "run_command", argumentsJSON: #"{"command":"df -h","safe_to_run":true}"#)
-        let (loop, _, host, _, _) = makeLoop(
+        let fixture = makeLoop(
             script: [
                 .init(text: "checking disk", toolCall: call),
                 .init(text: "done: 1MB used", toolCall: nil),
-            ]
+            ],
+            host: FakeHostSession(output: "1MB used")
         )
-        _ = try await loop.requestTurn(prompt: "disk", context: AgentContext(userPrompt: "disk", host: HostSummary(alias: "h", workingPaths: [])))
+        let loop = fixture.loop
+        try await loop.requestTurn(prompt: "disk", context: AgentContext(userPrompt: "disk", host: HostSummary(alias: "h", workingPaths: [])))
         let proposal = AgentProposal(
             toolCallID: "2",
             toolName: "run_command",
@@ -139,18 +151,21 @@ final class AgentLoopTests: XCTestCase {
             explanation: nil
         )
         try await loop.continueAfterApproval(proposal: proposal, editedCommand: nil)
+        let host = fixture.host
         let runs = await host.runs
         XCTAssertEqual(runs, ["df -h"])
     }
 
     func testEditedCommandIsReclassifiedBeforeRun() async throws {
         let call = AssistantToolCall(id: "3", name: "run_command", argumentsJSON: #"{"command":"ls","safe_to_run":true}"#)
-        let (loop, _, host, _, _) = makeLoop(
+        let fixture = makeLoop(
             script: [
                 .init(text: "list", toolCall: call),
                 .init(text: "blocked", toolCall: nil),
             ]
         )
+        let loop = fixture.loop
+        let host = fixture.host
         let first = try await loop.requestTurn(prompt: "show", context: AgentContext(userPrompt: "show", host: HostSummary(alias: "h", workingPaths: [])))
         guard let proposal = first.proposal else {
             return XCTFail("expected proposal")
@@ -164,12 +179,15 @@ final class AgentLoopTests: XCTestCase {
 
     func testRejectThenModelContinues() async throws {
         let call = AssistantToolCall(id: "4", name: "run_command", argumentsJSON: #"{"command":"rm x","safe_to_run":true}"#)
-        let (loop, _, host, _, audit) = makeLoop(
+        let fixture = makeLoop(
             script: [
                 .init(text: "propose", toolCall: call),
                 .init(text: "understood", toolCall: nil),
             ]
         )
+        let loop = fixture.loop
+        let host = fixture.host
+        let audit = fixture.audit
         let first = try await loop.requestTurn(prompt: "help", context: AgentContext(userPrompt: "help", host: HostSummary(alias: "h", workingPaths: [])))
         guard let proposal = first.proposal else {
             return XCTFail("expected proposal")
@@ -186,10 +204,11 @@ final class AgentLoopTests: XCTestCase {
 
     func testKillSwitchStopsExecution() async throws {
         let call = AssistantToolCall(id: "5", name: "run_command", argumentsJSON: #"{"command":"sleep 100","safe_to_run":false}"#)
-        let (loop, _, host, _, _) = makeLoop(
+        let fixture = makeLoop(
             script: [.init(text: "long", toolCall: call)],
             host: FakeHostSession(output: "never", shouldThrow: false)
         )
+        let loop = fixture.loop
         let first = try await loop.requestTurn(prompt: "long", context: AgentContext(userPrompt: "long", host: HostSummary(alias: "h", workingPaths: [])))
         guard let proposal = first.proposal else {
             return XCTFail("expected proposal")
@@ -202,10 +221,12 @@ final class AgentLoopTests: XCTestCase {
     func testDangerousCommandIsBlockedByEveryStrategy() async throws {
         let call = AssistantToolCall(id: "6", name: "run_command", argumentsJSON: #"{"command":"rm -rf /","safe_to_run":true}"#)
         for strategy in [ApprovalStrategy.alwaysAsk, .autoReview, .readOnly] {
-            let (loop, _, host, _, _) = makeLoop(
+            let fixture = makeLoop(
                 script: [.init(text: "bad", toolCall: call)],
                 strategy: strategy
             )
+            let loop = fixture.loop
+            let host = fixture.host
             let turn = try await loop.requestTurn(prompt: "go", context: AgentContext(userPrompt: "go", host: HostSummary(alias: "h", workingPaths: [])))
             XCTAssertEqual(turn.proposal?.classification.verdict, .critical, "strategy \(strategy) must classify rm -rf / as critical")
             let runs = await host.runs

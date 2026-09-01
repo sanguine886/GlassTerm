@@ -123,47 +123,8 @@ public struct AnthropicAdapter: AIChatStreaming {
                 for line in parser.parse(chunk) {
                     guard let data = line.jsonData else { continue }
                     let event = try Self.decodeEvent(from: data)
-                    switch event {
-                    case .contentStart:
-                        // Text block start carries no payload we act on.
-                        break
-                    case let .contentDelta(_, text):
-                        if !text.isEmpty {
-                            hasProgress = true
-                            continuation.yield(.content(text))
-                        }
-                    case let .contentBlockStart(index, toolUse):
-                        if let toolUse {
-                            let running = await accumulator.accumulate(
-                                fragment: "",
-                                at: index,
-                                id: toolUse.id,
-                                name: toolUse.name
-                            )
-                            continuation.yield(.toolCall(running))
-                        }
-                    case let .contentBlockDelta(index, part):
-                        if let text = part.text, !text.isEmpty {
-                            hasProgress = true
-                            continuation.yield(.content(text))
-                        } else if let input = part.inputJSON {
-                            hasProgress = true
-                            let running = await accumulator.accumulate(
-                                fragment: input,
-                                at: index,
-                                id: nil,
-                                name: nil
-                            )
-                            continuation.yield(.toolCall(running))
-                        }
-                    case let .messageDelta(usageDelta):
-                        if let usageDelta {
-                            usage = usageDelta
-                            continuation.yield(.usage(usageDelta))
-                        }
-                    case .messageStop:
-                        messageDone = true
-                    case .unhandled:
+                    await handle(event: event, accumulator: accumulator, continuation: continuation, hasProgress: &hasProgress, usage: &usage, messageDone: &messageDone)
+                    if messageDone {
                         break
                     }
                 }
@@ -192,6 +153,61 @@ public struct AnthropicAdapter: AIChatStreaming {
             return .completed
         }
         return .unfinished(hasProgress: false)
+    }
+
+    /// Dispatches one decoded Anthropic stream event, forwarding deltas to the
+    /// subscription and mutating the per-stream state. Extracted so the loop
+    /// stays below the cyclomatic-complexity limit.
+    private func handle(
+        event: AnthropicStreamEvent,
+        accumulator: ToolCallAccumulator,
+        continuation: AsyncThrowingStream<ChatStreamEvent, Error>.Continuation,
+        hasProgress: inout Bool,
+        usage: inout TokenUsage?,
+        messageDone: inout Bool
+    ) async {
+        switch event {
+        case .contentStart:
+            break
+        case let .contentDelta(_, text):
+            if !text.isEmpty {
+                hasProgress = true
+                continuation.yield(.content(text))
+            }
+        case let .contentBlockStart(index, toolUse):
+            if let toolUse {
+                let running = await accumulator.accumulate(
+                    fragment: "",
+                    at: index,
+                    id: toolUse.id,
+                    name: toolUse.name
+                )
+                continuation.yield(.toolCall(running))
+            }
+        case let .contentBlockDelta(index, part):
+            if let text = part.text, !text.isEmpty {
+                hasProgress = true
+                continuation.yield(.content(text))
+            } else if let input = part.inputJSON {
+                hasProgress = true
+                let running = await accumulator.accumulate(
+                    fragment: input,
+                    at: index,
+                    id: nil,
+                    name: nil
+                )
+                continuation.yield(.toolCall(running))
+            }
+        case let .messageDelta(usageDelta):
+            if let usageDelta {
+                usage = usageDelta
+                continuation.yield(.usage(usageDelta))
+            }
+        case .messageStop:
+            messageDone = true
+        case .unhandled:
+            break
+        }
     }
 
     // MARK: - Request building

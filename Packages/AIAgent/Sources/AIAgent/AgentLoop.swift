@@ -210,7 +210,7 @@ public final class AgentLoop {
             cmd
         } else if case let .string(p) = arguments["path"] {
             p
-        } else if case let .object(obj) = arguments["arguments"] {
+        } else if case .object = arguments["arguments"] {
             nil
         } else {
             nil
