@@ -92,7 +92,7 @@ struct SFTPBrowserView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: GlassSpacing.xs) {
                 crumb("sftp.root", path: "/")
-                ForEach(breadcrumbSteps, id: \.self) { step in
+                ForEach(breadcrumbSteps, id: \.path) { step in
                     Image(systemName: "chevron.right").font(.caption2)
                     crumb(String(step.label), path: step.path)
                 }
