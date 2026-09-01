@@ -98,7 +98,10 @@ final class OpenAICompatibleAdapterTests: XCTestCase {
                     ],
                 ]],
             ]),
-            sse(withDelta: ["choices": [["delta": [:], "finish_reason": "stop"]], "usage": ["prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15]]) + sseRaw("[DONE]"),
+            sse(withDelta: [
+                "choices": [["delta": [:], "finish_reason": "stop"]],
+                "usage": ["prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15],
+            ]) + sseRaw("[DONE]"),
         ]
         let fake = FakeHTTPStreamingTransport([.init(statusCode: 200, chunks: chunkStream(frames))])
         let adapter = OpenAICompatibleAdapter(config: testConfig, apiKey: testAPIKey, http: fake)
