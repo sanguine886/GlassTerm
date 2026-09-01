@@ -5,6 +5,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      coverage_only:
+        description: "Run only AIAgent swift test + coverage gate (fast coverage iteration)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -22,6 +27,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install tooling
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: |
           set -euo pipefail
           for tool in xcodegen swiftlint swiftformat; do
@@ -31,20 +37,24 @@ jobs:
           done
 
       - name: Lint
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: |
           set -euo pipefail
           swiftformat --lint .
           swiftlint --quiet
 
       - name: Generate Xcode project
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: xcodegen generate
 
       - name: CoreSSH engine tests (swift test)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: |
           set -euo pipefail
           swift test --package-path Packages/CoreSSH --enable-code-coverage 2>&1
 
       - name: TerminalKit logic tests (swift test)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: |
           set -euo pipefail
           swift test --package-path Packages/TerminalKit 2>&1
@@ -73,19 +83,29 @@ jobs:
           python3 - <<'PY'
           import re, sys
           text = open('/tmp/aia_cov.txt').read()
-          total = [l for l in text.splitlines() if l.strip().startswith('TOTAL')][-1]
-          cov = float(re.findall(r'([\d.]+)%', total)[-1])
-          print(total.strip())
+          total = [l for l in text.splitlines() if l.strip().startswith('TOTAL')]
+          if not total:
+              print("report had no TOTAL line"); sys.exit(1)
+          cov = float(re.findall(r'([\d.]+)%', total[-1])[-1])
+
+          # Per-file line coverage, ascending — so under-covered files stand out.
+          print("Per-file line coverage (ascending):")
+          for l in sorted(text.splitlines(), key=lambda ln: (float(re.findall(r'([\d.]+)%', ln)[-1]) if re.findall(r'([\d.]+)%', ln) else 0.0)):
+              if l.strip() and not l.strip().startswith('---'):
+                  print(f"  {l.strip()}")
+          print(total[-1].strip())
           print(f'AIAgent line coverage: {cov:.1f}%')
           sys.exit(0 if cov >= 60.0 else 1)
           PY
 
       - name: Persistence logic tests (swift test)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: |
           set -euo pipefail
           swift test --package-path Packages/Persistence --enable-code-coverage 2>&1
 
       - name: Coverage gate — Persistence ≥ 60% (ADR-0005, swift test)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: |
           set -euo pipefail
           profdata=$(find Packages/Persistence/.build -name "*.profdata" | head -1)
@@ -110,6 +130,7 @@ jobs:
           PY
 
       - name: Coverage gate — CoreSSH ≥ 60% (ADR-0005)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: |
           set -euo pipefail
           # swift test emits LLVM profdata (not xccov), so llvm-cov reads it.
@@ -135,6 +156,7 @@ jobs:
           PY
 
       - name: Ensure iPhone 16 Pro simulator exists
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: |
           set -euo pipefail
           if ! xcrun simctl list devices available | grep -q "iPhone 16 Pro ("; then
@@ -151,6 +173,7 @@ jobs:
           fi
 
       - name: Build & Test
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: |
           set -euo pipefail
           mkdir -p build
@@ -165,13 +188,13 @@ jobs:
             || (echo "=== raw xcodebuild tail ===" && tail -80 build/test.log && exit 1)
 
       - name: Coverage report
-        if: always()
+        if: ${{ always() && !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: |
           set -euo pipefail
           xcrun xccov view --report build/DerivedData/Logs/Test/*.xcresult || true
 
       - name: Upload test results
-        if: always()
+        if: ${{ always() && !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         uses: actions/upload-artifact@v4
         with:
           name: xcresult
@@ -180,6 +203,7 @@ jobs:
 
   ipa:
     name: Unsigned IPA (device build)
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
     runs-on: macos-26
     timeout-minutes: 30
     steps:
