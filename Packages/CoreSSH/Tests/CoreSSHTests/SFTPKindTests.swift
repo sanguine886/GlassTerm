@@ -27,4 +27,27 @@ final class SFTPKindTests: XCTestCase {
     func testKindUnknownWithoutTypeBits() {
         XCTAssertEqual(CitadelSFTP.kind(of: component("???", permissions: nil)), .unknown)
     }
+
+    func testEntryFromComponentMapsFields() {
+        var attrs = SFTPFileAttributes()
+        attrs.permissions = 0o100644
+        attrs.size = 42
+        let comp = SFTPPathComponent(
+            filename: "notes.txt",
+            longname: "-rw-r--r-- 1 u g 42 Jan 1 00:00 notes.txt",
+            attributes: attrs
+        )
+        let entry = CitadelSFTP.entry(from: comp)
+        XCTAssertEqual(entry.name, "notes.txt")
+        XCTAssertEqual(entry.kind, .file)
+        XCTAssertEqual(entry.size, 42)
+        XCTAssertEqual(entry.permissions, 0o100644)
+    }
+
+    func testEntryFromComponentDirWithoutSize() {
+        let comp = component("drwxr-xr-x", permissions: 0o040755)
+        let entry = CitadelSFTP.entry(from: comp)
+        XCTAssertEqual(entry.kind, .directory)
+        XCTAssertNil(entry.size)
+    }
 }

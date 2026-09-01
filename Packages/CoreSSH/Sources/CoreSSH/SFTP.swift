@@ -53,15 +53,18 @@ public final class CitadelSFTP: SFTPService, @unchecked Sendable {
         let names = try await client.listDirectory(atPath: directory)
         return names
             .flatMap(\.components)
-            .map { entry in
-                SFTPEntry(
-                    name: entry.filename,
-                    kind: Self.kind(of: entry),
-                    size: entry.attributes.size,
-                    permissions: entry.attributes.permissions
-                )
-            }
+            .map { Self.entry(from: $0) }
             .sorted { $0.name < $1.name }
+    }
+
+    /// Maps one SFTP directory component to its display entry.
+    static func entry(from component: SFTPPathComponent) -> SFTPEntry {
+        SFTPEntry(
+            name: component.filename,
+            kind: kind(of: component),
+            size: component.attributes.size,
+            permissions: component.attributes.permissions
+        )
     }
 
     /// Infers entry kind from the Unix mode type bits (S_IFMT) in
