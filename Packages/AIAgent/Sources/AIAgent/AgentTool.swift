@@ -199,8 +199,8 @@ public struct AgentToolRegistry: Sendable {
             "type": .string("boolean"),
             "description": .string(
                 "Set true only when running this action now is safe: read-only, "
-                    "idempotent, or fully reversible. When in doubt, set false so the "
-                    "user can review it."
+                    + "idempotent, or fully reversible. When in doubt, set false so the "
+                    + "user can review it."
             ),
         ])
     }

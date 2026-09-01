@@ -116,9 +116,13 @@ public struct GeminiAdapter: AIChatStreaming {
 
         do {
             for try await chunk in stream {
-                if Task.isCancelled { throw CancellationError() }
+                if Task.isCancelled {
+                    throw CancellationError()
+                }
                 for line in lineParser.consume(chunk) {
-                    if line.isEmpty { continue }
+                    if line.isEmpty {
+                        continue
+                    }
                     if Self.isStreamEnd(line) {
                         terminalReached = true
                         break
@@ -343,7 +347,9 @@ public struct GeminiAdapter: AIChatStreaming {
         var body = Data()
         for try await chunk in stream {
             body.append(chunk)
-            if body.count > 4096 { break }
+            if body.count > 4096 {
+                break
+            }
         }
         return body
     }

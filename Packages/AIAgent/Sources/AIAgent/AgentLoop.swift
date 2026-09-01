@@ -173,7 +173,9 @@ public final class AgentLoop {
                 switch event {
                 case let .content(t):
                     textPieces.append(t)
-                    if t.isEmpty { continue }
+                    if t.isEmpty {
+                        continue
+                    }
                 case let .toolCall(delta):
                     // Fragment deltas concatenate into a single call.
                     toolCall = AssistantToolCall(id: delta.id, name: delta.name ?? "", argumentsJSON: delta.argumentsJSON)

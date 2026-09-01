@@ -9,7 +9,9 @@ private actor TriggerBox {
 final class AgentKillSwitchTests: XCTestCase {
     private func pollUntilCount(_ box: TriggerBox, equals expected: Int) async {
         for _ in 0..<100 {
-            if await box.count == expected { return }
+            if await box.count == expected {
+                return
+            }
             try? await Task.sleep(for: .milliseconds(10))
         }
     }

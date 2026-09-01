@@ -172,7 +172,9 @@ final class OpenAICompatibleAdapterTests: XCTestCase {
         }
 
         let text = events.compactMap { event -> String? in
-            if case let .content(s) = event { return s }
+            if case let .content(s) = event {
+                return s
+            }
             return nil
         }.joined()
         XCTAssertEqual(text, "ok")

@@ -92,13 +92,17 @@ final class GeminiAdapterTests: XCTestCase {
         }
 
         let text = events.compactMap { event -> String? in
-            if case let .content(s) = event { return s }
+            if case let .content(s) = event {
+                return s
+            }
             return nil
         }.joined()
         XCTAssertEqual(text, "Hello world")
 
         let usage = events.compactMap { event -> TokenUsage? in
-            if case let .usage(u) = event { return u }
+            if case let .usage(u) = event {
+                return u
+            }
             return nil
         }.first
         XCTAssertEqual(usage?.promptTokens, 4)
@@ -128,7 +132,9 @@ final class GeminiAdapterTests: XCTestCase {
         }
 
         let completes = events.compactMap { event -> ChatToolCallDelta? in
-            if case let .toolCallComplete(delta) = event { return delta }
+            if case let .toolCallComplete(delta) = event {
+                return delta
+            }
             return nil
         }
         XCTAssertEqual(completes.count, 1)

@@ -137,7 +137,9 @@ public struct OpenAICompatibleAdapter: AIChatStreaming {
 
         do {
             for try await chunk in stream {
-                if Task.isCancelled { throw CancellationError() }
+                if Task.isCancelled {
+                    throw CancellationError()
+                }
                 for line in parser.parse(chunk) {
                     guard let data = line.jsonData else { continue }
                     let delta = try Self.decodeDelta(from: data)
@@ -340,7 +342,9 @@ public struct OpenAICompatibleAdapter: AIChatStreaming {
         var body = Data()
         for try await chunk in stream {
             body.append(chunk)
-            if body.count > 4096 { break }
+            if body.count > 4096 {
+                break
+            }
         }
         return body
     }

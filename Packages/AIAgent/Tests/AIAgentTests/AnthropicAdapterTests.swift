@@ -95,13 +95,17 @@ final class AnthropicAdapterTests: XCTestCase {
         }
 
         let text = events.compactMap { event -> String? in
-            if case let .content(s) = event { return s }
+            if case let .content(s) = event {
+                return s
+            }
             return nil
         }.joined()
         XCTAssertEqual(text, "Hello world")
 
         let usage = events.compactMap { event -> TokenUsage? in
-            if case let .usage(u) = event { return u }
+            if case let .usage(u) = event {
+                return u
+            }
             return nil
         }.first
         XCTAssertEqual(usage?.promptTokens, 5)

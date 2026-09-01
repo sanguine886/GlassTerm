@@ -72,7 +72,9 @@ final class AgentToolRegistryTests: XCTestCase {
     }
 
     private func extractObject(_ value: JSONValue?) -> [String: JSONValue]? {
-        if case let .object(dict)? = value { return dict }
+        if case let .object(dict)? = value {
+            return dict
+        }
         return nil
     }
 

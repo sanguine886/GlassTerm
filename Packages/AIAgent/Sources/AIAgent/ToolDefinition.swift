@@ -82,12 +82,16 @@ extension JSONValue {
     // Convenience readers so consumers can pull scalars out of a tool-argument
     // document without pattern-matching the whole tree (spec §2.2).
     public var stringValue: String? {
-        if case let .string(value) = self { return value }
+        if case let .string(value) = self {
+            return value
+        }
         return nil
     }
 
     public var integerValue: Int? {
-        if case let .integer(value) = self { return value }
+        if case let .integer(value) = self {
+            return value
+        }
         return nil
     }
 
@@ -100,12 +104,16 @@ extension JSONValue {
     }
 
     public var booleanValue: Bool? {
-        if case let .boolean(value) = self { return value }
+        if case let .boolean(value) = self {
+            return value
+        }
         return nil
     }
 
     public subscript(key: String) -> JSONValue? {
-        if case let .object(dictionary) = self { return dictionary[key] }
+        if case let .object(dictionary) = self {
+            return dictionary[key]
+        }
         return nil
     }
 }

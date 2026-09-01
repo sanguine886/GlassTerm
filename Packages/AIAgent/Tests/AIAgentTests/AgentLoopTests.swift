@@ -19,7 +19,7 @@ actor FakeChatProvider: AIChatStreaming {
         self.script = script
     }
 
-    nonisolated func streamCompletion(
+    func streamCompletion(
         _ request: ChatCompletionRequest
     ) async throws -> AsyncThrowingStream<ChatStreamEvent, Error> {
         let script = self.script

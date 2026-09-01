@@ -254,7 +254,9 @@ public struct DangerousCommandClassifier: Sendable {
     private static func regex(for id: String, pattern: String, options: NSRegularExpression.Options = [.caseInsensitive]) -> NSRegularExpression? {
         lock.lock()
         defer { lock.unlock() }
-        if let cached = cache[id] { return cached }
+        if let cached = cache[id] {
+            return cached
+        }
         guard let compiled = try? NSRegularExpression(pattern: pattern, options: options) else {
             return nil
         }
