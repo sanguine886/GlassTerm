@@ -6,14 +6,11 @@ public enum SFTPPath {
     /// Root is "/"; everything else has no trailing slash.
     public static func normalized(_ path: String) -> String {
         let clean = path.isEmpty ? "/" : path
-        if clean == "/" {
-            return "/"
-        }
         var result = clean
-        while result.hasSuffix("/") {
+        while result.hasSuffix("/"), result != "/" {
             result.removeLast()
         }
-        return result
+        return result.isEmpty ? "/" : result
     }
 
     /// Joins a directory and a file name with exactly one slash.
