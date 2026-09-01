@@ -114,15 +114,14 @@ public struct DangerousCommandClassifier: Sendable {
     ]
 
     public static let ruleSet: [DangerRule] = [
+        DangerRule(id: "rm-recursive-force", pattern: #"rm\s+(-{1,2}[a-z]*)?r[a-z]*f\b"#, severity: .dangerous, summary: "Any rm -rf recursive force delete"),
         DangerRule(id: "rm-no-preserve-root", pattern: #"rm\s+.*--no-preserve-root"#, severity: .critical, summary: "Delete bypassing root protection"),
-        DangerRule(id: "rm-rf-root-variable", pattern: #"rm\s+(-{1,2}[a-z]*)?r[a-z]*f\s+(\$|/)"#, severity: .critical, summary: "rm -rf to root or a variable"),
         DangerRule(
             id: "rm-rf-home-cwd",
             pattern: #"rm\s+(-{1,2}[a-z]*)?r[a-z]*f\s+(~|\$HOME|\.\s|\s\.\b)"#,
             severity: .dangerous,
             summary: "rm -rf home directory or current directory"
         ),
-        DangerRule(id: "rm-recursive-force", pattern: #"rm\s+(-{1,2}[a-z]*)?r[a-z]*f\b"#, severity: .dangerous, summary: "Any rm -rf recursive force delete"),
         DangerRule(id: "rm-auth-files", pattern: #"\brm\s+/etc/(passwd|shadow|sudoers)"#, severity: .critical, summary: "Delete system authentication files"),
         DangerRule(id: "mkfs", pattern: #"(\bmkfs|mkfs\.\w+)\s"#, severity: .dangerous, summary: "Format a filesystem"),
         DangerRule(id: "mkswap", pattern: #"\bmkswap"#, severity: .dangerous, summary: "Create swap space"),

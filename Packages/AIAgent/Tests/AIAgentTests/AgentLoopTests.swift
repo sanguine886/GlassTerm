@@ -237,7 +237,7 @@ final class AgentLoopTests: XCTestCase {
             let loop = fixture.loop
             let host = fixture.host
             let turn = try await loop.requestTurn(prompt: "go", context: AgentContext(userPrompt: "go", host: HostSummary(alias: "h", workingPaths: [])))
-            XCTAssertEqual(turn.proposal?.classification.verdict, .critical, "strategy \(strategy) must classify rm -rf / as critical")
+            XCTAssertEqual(turn.proposal?.classification.verdict, .dangerous, "strategy \(strategy) must classify rm -rf / as dangerous")
             let runs = await host.runs
             XCTAssertTrue(runs.isEmpty, "no strategy may run a critical command")
         }
