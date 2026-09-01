@@ -8,7 +8,8 @@ import XCTest
 /// GlassTermTests assertions and add snippet coverage (ADR-0002/ADR-0005).
 final class HostStoreTests: XCTestCase {
     func testCRUDRoundtripInMemory() throws {
-        let store = HostStore(container: try HostStore.makeContainer(inMemory: true))
+        let container = try HostStore.makeContainer(inMemory: true)
+        let store = HostStore(container: container)
         let record = HostRecord(name: "sanguine", hostname: "3.144.150.31", port: 22, username: "glassterm", authKind: .privateKey, secretRef: "ref-1")
         try store.add(record)
 
@@ -25,7 +26,8 @@ final class HostStoreTests: XCTestCase {
     }
 
     func testUpdatePersistsFieldChanges() throws {
-        let store = HostStore(container: try HostStore.makeContainer(inMemory: true))
+        let container = try HostStore.makeContainer(inMemory: true)
+        let store = HostStore(container: container)
         let record = HostRecord(name: "before", hostname: "h", username: "u")
         try store.add(record)
 
@@ -39,7 +41,8 @@ final class HostStoreTests: XCTestCase {
     }
 
     func testAllSortedByCreation() throws {
-        let store = HostStore(container: try HostStore.makeContainer(inMemory: true))
+        let container = try HostStore.makeContainer(inMemory: true)
+        let store = HostStore(container: container)
         let older = HostRecord(name: "older", hostname: "a", username: "u", createdAt: Date(timeIntervalSinceNow: -100))
         let newer = HostRecord(name: "newer", hostname: "b", username: "u", createdAt: Date())
         try store.add(newer)
@@ -57,7 +60,8 @@ final class HostStoreTests: XCTestCase {
 
 final class SnippetStoreTests: XCTestCase {
     func testCRUDRoundtripInMemory() throws {
-        let store = SnippetStore(container: try SnippetStore.makeContainer(inMemory: true))
+        let container = try SnippetStore.makeContainer(inMemory: true)
+        let store = SnippetStore(container: container)
         let snippet = SnippetRecord(name: "health", command: "df -h")
         try store.add(snippet)
 
@@ -74,7 +78,8 @@ final class SnippetStoreTests: XCTestCase {
     }
 
     func testTargetHostBinding() throws {
-        let store = SnippetStore(container: try SnippetStore.makeContainer(inMemory: true))
+        let container = try SnippetStore.makeContainer(inMemory: true)
+        let store = SnippetStore(container: container)
         let hostID = UUID()
         let snippet = SnippetRecord(name: "deploy", command: "deploy.sh", targetHostID: hostID)
         try store.add(snippet)
