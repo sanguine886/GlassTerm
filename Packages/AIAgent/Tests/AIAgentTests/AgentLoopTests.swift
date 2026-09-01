@@ -125,7 +125,8 @@ final class AgentLoopTests: XCTestCase {
         let call = AssistantToolCall(id: "1", name: "run_command", argumentsJSON: #"{"command":"ls -la /tmp","safe_to_run":false}"#)
         let fixture = makeLoop(script: [.init(text: "let me list", toolCall: call)])
         let loop = fixture.loop
-        let turn = try await loop.requestTurn(prompt: "list tmp", context: AgentContext(userPrompt: "list tmp", host: HostSummary(alias: "host", workingPaths: ["/tmp"])))
+        let context = AgentContext(userPrompt: "list tmp", host: HostSummary(alias: "host", workingPaths: ["/tmp"]))
+        let turn = try await loop.requestTurn(prompt: "list tmp", context: context)
         XCTAssertEqual(turn.proposal?.toolName, "run_command")
         XCTAssertEqual(turn.proposal?.classification.verdict, .safe)
     }

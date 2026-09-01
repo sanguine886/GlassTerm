@@ -123,7 +123,14 @@ public struct AnthropicAdapter: AIChatStreaming {
                 for line in parser.parse(chunk) {
                     guard let data = line.jsonData else { continue }
                     let event = try Self.decodeEvent(from: data)
-                    await handle(event: event, accumulator: accumulator, continuation: continuation, hasProgress: &hasProgress, usage: &usage, messageDone: &messageDone)
+                    await handle(
+                        event: event,
+                        accumulator: accumulator,
+                        continuation: continuation,
+                        hasProgress: &hasProgress,
+                        usage: &usage,
+                        messageDone: &messageDone
+                    )
                     if messageDone {
                         break
                     }
