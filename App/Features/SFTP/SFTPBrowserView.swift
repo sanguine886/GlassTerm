@@ -92,19 +92,30 @@ struct SFTPBrowserView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: GlassSpacing.xs) {
                 crumb("sftp.root", path: "/")
-                let components = currentPath.split(separator: "/")
-                var accumulated = ""
-                ForEach(Array(components.enumerated()), id: \.offset) { _, component in
-                    Image(systemName: "chevron.right")
-                        .font(.caption2)
-                    accumulated += "/" + component
-                    crumb(String(component), path: accumulated)
+                ForEach(breadcrumbSteps, id: \.self) { step in
+                    Image(systemName: "chevron.right").font(.caption2)
+                    crumb(String(step.label), path: step.path)
                 }
             }
             .padding(.horizontal, GlassSpacing.md)
             .padding(.vertical, 6)
         }
         .background(.thinMaterial)
+    }
+
+    /// Precomputed breadcrumb steps (label + full path), so the view body has
+    /// no mutable capture — cleaner for Swift 6/view builders and avoids a
+    /// Release-only "failed to produce diagnostic" compiler quirk.
+    private var breadcrumbSteps: [(label: Substring, path: String)] {
+        let components = currentPath.split(separator: "/")
+        var steps: [(label: Substring, path: String)] = []
+        steps.reserveCapacity(components.count)
+        var accumulated = "/"
+        for component in components {
+            accumulated = accumulated == "/" ? "/" + component : accumulated + "/" + component
+            steps.append((label: component, path: accumulated))
+        }
+        return steps
     }
 
     private func crumb(_ label: String, path: String) -> some View {
@@ -267,11 +278,9 @@ struct SFTPBrowserView: View {
     }
 
     private func createFolder() {
-        var name = ""
         let alert = UIAlertController(title: String(localized: "sftp.newFolder"), message: nil, preferredStyle: .alert)
         alert.addTextField { field in
             field.placeholder = String(localized: "sftp.newFolderName")
-            name = field.text ?? ""
         }
         alert.addAction(UIAlertAction(title: String(localized: "common.cancel"), style: .cancel))
         alert.addAction(UIAlertAction(title: String(localized: "common.save"), style: .default) { _ in
