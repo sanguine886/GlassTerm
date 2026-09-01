@@ -1,7 +1,6 @@
 import Citadel
-import XCTest
-
 @testable import CoreSSH
+import XCTest
 
 /// Tests the pure static `CitadelSFTP.kind(of:)` inference from Unix mode
 /// type bits and the ls-style `longname` fallback.
@@ -29,3 +28,4 @@ final class SFTPKindTests: XCTestCase {
         XCTAssertEqual(CitadelSFTP.kind(of: component("???", permissions: nil)), .unknown)
     }
 }
+

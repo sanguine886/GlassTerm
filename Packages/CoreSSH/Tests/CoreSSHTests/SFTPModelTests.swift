@@ -37,3 +37,4 @@ final class SFTPModelTests: XCTestCase {
         XCTAssertNotEqual(SFTPError.notConnected, .operationFailed("x"))
     }
 }
+
