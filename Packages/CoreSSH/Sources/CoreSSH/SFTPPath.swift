@@ -9,7 +9,11 @@ public enum SFTPPath {
         if clean == "/" {
             return "/"
         }
-        return String(clean.dropLast(while: { $0 == "/" }))
+        var result = clean
+        while result.hasSuffix("/") {
+            result.removeLast()
+        }
+        return result
     }
 
     /// Joins a directory and a file name with exactly one slash.
