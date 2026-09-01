@@ -58,12 +58,12 @@ import Foundation
         private func handle(_ event: ShellEvent) {
             switch event {
             case let .stdout(data):
-                terminalView.feed(byteArray: Array(data)[0..<data.count])
+                terminalView.feed(byteArray: Array(data)[0 ..< data.count])
                 if TmuxDetector.containsTmuxMarker(in: data) {
                     onTmuxDetected?()
                 }
             case let .stderr(data):
-                terminalView.feed(byteArray: Array(data)[0..<data.count])
+                terminalView.feed(byteArray: Array(data)[0 ..< data.count])
             case .exited:
                 break
             }
