@@ -3,12 +3,14 @@ import XCTest
 
 private actor TriggerBox {
     private(set) var count = 0
-    func bump() { count += 1 }
+    func bump() {
+        count += 1
+    }
 }
 
 final class AgentKillSwitchTests: XCTestCase {
     private func pollUntilCount(_ box: TriggerBox, equals expected: Int) async {
-        for _ in 0..<100 {
+        for _ in 0 ..< 100 {
             if await box.count == expected {
                 return
             }
@@ -20,11 +22,11 @@ final class AgentKillSwitchTests: XCTestCase {
         let token = AgentCancellationToken()
         let box = TriggerBox()
         await token.register { await box.bump() }
-        XCTAssertFalse(await token.isCancelled)
+        await XCTAssertFalse(token.isCancelled)
         await token.cancel()
         await pollUntilCount(box, equals: 1)
-        XCTAssertEqual(await box.count, 1)
-        XCTAssertTrue(await token.isCancelled)
+        await XCTAssertEqual(box.count, 1)
+        await XCTAssertTrue(token.isCancelled)
     }
 
     func testUnregisteredHandlerIsNotFiredOnCancel() async {
@@ -36,8 +38,8 @@ final class AgentKillSwitchTests: XCTestCase {
         await token.unregister(id)
         await token.cancel()
         try? await Task.sleep(for: .milliseconds(50))
-        XCTAssertEqual(await box.count, 0)
-        XCTAssertTrue(await token.isCancelled)
+        await XCTAssertEqual(box.count, 0)
+        await XCTAssertTrue(token.isCancelled)
     }
 
     func testThrowIfCancelledThrowsAfterCancel() async {
@@ -61,7 +63,7 @@ final class AgentKillSwitchTests: XCTestCase {
         _ = await token.register { await box.bump() }
         await token.cancel()
         await pollUntilCount(box, equals: 2)
-        XCTAssertEqual(await box.count, 2)
+        await XCTAssertEqual(box.count, 2)
     }
 
     func testCancelIsIdempotent() async {
@@ -72,6 +74,6 @@ final class AgentKillSwitchTests: XCTestCase {
         await pollUntilCount(box, equals: 1)
         await token.cancel()
         try? await Task.sleep(for: .milliseconds(30))
-        XCTAssertEqual(await box.count, 1)
+        await XCTAssertEqual(box.count, 1)
     }
 }

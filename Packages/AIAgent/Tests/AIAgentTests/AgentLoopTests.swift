@@ -1,8 +1,6 @@
-import AIAgent
+@testable import AIAgent
 import Foundation
 import XCTest
-
-@testable import AIAgent
 
 /// Scripted chat provider for agent-loop tests (spec §6.5.2 fake injection).
 actor FakeChatProvider: AIChatStreaming {
@@ -20,12 +18,12 @@ actor FakeChatProvider: AIChatStreaming {
     }
 
     func streamCompletion(
-        _ request: ChatCompletionRequest
+        _: ChatCompletionRequest
     ) async throws -> AsyncThrowingStream<ChatStreamEvent, Error> {
-        let script = self.script
-        let index = self.requests
+        let script = script
+        let index = requests
         let response = script[min(index, script.count - 1)]
-        self.requests += 1
+        requests += 1
         return AsyncThrowingStream { continuation in
             if !response.text.isEmpty {
                 continuation.yield(.content(response.text))
@@ -46,7 +44,7 @@ struct FakeToolExecutor: AgentToolExecutor, Sendable {
 
     func execute(
         _ invocation: AgentToolInvocation,
-        cancelToken: AgentCancellationToken?
+        cancelToken _: AgentCancellationToken?
     ) async throws -> ToolResult {
         ToolResult(toolCallID: invocation.toolCallID, text: output, status: .success, truncated: false)
     }
@@ -64,7 +62,7 @@ actor FakeHostSession: HostCommandSession {
         self.shouldThrow = shouldThrow
     }
 
-    func run(command: String, timeout: TimeInterval) async throws -> AsyncThrowingStream<String, Error> {
+    func run(command: String, timeout _: TimeInterval) async throws -> AsyncThrowingStream<String, Error> {
         try await Task.sleep(nanoseconds: 10_000_000)
         runs.append(command)
         if shouldThrow {
@@ -90,8 +88,8 @@ final class AgentLoopTests: XCTestCase {
         script: [FakeChatProvider.Response],
         host: FakeHostSession = FakeHostSession(),
         strategy: ApprovalStrategy = .alwaysAsk,
-        toolName: String = "run_command",
-        toolArguments: [String: JSONValue] = ["command": .string("ls -la /tmp"), "safe_to_run": .boolean(false)]
+        toolName _: String = "run_command",
+        toolArguments _: [String: JSONValue] = ["command": .string("ls -la /tmp"), "safe_to_run": .boolean(false)]
     ) -> (AgentLoop, FakeChatProvider, FakeHostSession, AgentToolRegistry, InMemoryAuditLog) {
         let provider = FakeChatProvider(script)
         var registry = AgentToolRegistry(definitions: AgentToolRegistry.defaultToolDefinitions)

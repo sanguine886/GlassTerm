@@ -206,15 +206,14 @@ public final class AgentLoop {
 
     private func makeProposal(from call: AssistantToolCall, text: String) async throws -> AgentProposal {
         let arguments = Self.parseArguments(call.argumentsJSON ?? "{}")
-        let commandText: String?
-        if case let .string(cmd) = arguments["command"] {
-            commandText = cmd
+        let commandText: String? = if case let .string(cmd) = arguments["command"] {
+            cmd
         } else if case let .string(p) = arguments["path"] {
-            commandText = p
+            p
         } else if case let .object(obj) = arguments["arguments"] {
-            commandText = nil
+            nil
         } else {
-            commandText = nil
+            nil
         }
         let safe = arguments["safe_to_run"] == .boolean(true)
         let classification = DangerousCommandClassifier().classify(commandText ?? "")

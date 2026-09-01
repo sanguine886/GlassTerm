@@ -34,7 +34,7 @@ public struct SSHSessionCommandAdapter: HostCommandSession, Sendable {
         await session.state == .connected
     }
 
-    public func run(command: String, timeout: TimeInterval) async throws -> AsyncThrowingStream<String, Error> {
+    public func run(command: String, timeout _: TimeInterval) async throws -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {

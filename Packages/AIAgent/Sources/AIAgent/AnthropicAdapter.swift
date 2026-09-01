@@ -33,7 +33,7 @@ public struct AnthropicAdapter: AIChatStreaming {
     ) async throws -> AsyncThrowingStream<ChatStreamEvent, Error> {
         let url = try Self.messagesURL(from: config.baseURL)
         return AsyncThrowingStream<ChatStreamEvent, Error>(bufferingPolicy: .unbounded) { continuation in
-            let task = Task { await self.run(request: request, url: url, continuation: continuation) }
+            let task = Task { await run(request: request, url: url, continuation: continuation) }
             continuation.onTermination = { _ in task.cancel() }
         }
     }
@@ -380,10 +380,10 @@ public struct AnthropicAdapter: AIChatStreaming {
 
     static func anthropicRole(_ role: ChatRole) -> String {
         switch role {
-        case .system: return "user"
-        case .tool: return "user"
-        case .user: return "user"
-        case .assistant: return "assistant"
+        case .system: "user"
+        case .tool: "user"
+        case .user: "user"
+        case .assistant: "assistant"
         }
     }
 

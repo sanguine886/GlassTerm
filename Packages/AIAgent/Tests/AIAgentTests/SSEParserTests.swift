@@ -19,17 +19,18 @@ final class SSEParserTests: XCTestCase {
         let frames = parser.parse(data(chunk))
 
         XCTAssertEqual(frames.count, 3)
-        XCTAssertEqual(frames.map { String(data: $0.jsonData!, encoding: .utf8) }, ["one", "two", "three"])
+        XCTAssertEqual(frames.compactMap { $0.jsonData.map { String(data: $0, encoding: .utf8) } }, ["one", "two", "three"])
     }
 
-    func testFramesSplitAcrossChunkBoundaries() {
+    func testFramesSplitAcrossChunkBoundaries() throws {
         var parser = SSEParser()
         let first = parser.parse(data("data: ch"))
         XCTAssertEqual(first.count, 0)
 
         let second = parser.parse(data("unk1\n\n"))
         XCTAssertEqual(second.count, 1)
-        XCTAssertEqual(String(data: second[0].jsonData!, encoding: .utf8), "chunk1")
+        let unwrapped = try XCTUnwrap(second[0].jsonData)
+        XCTAssertEqual(String(data: unwrapped, encoding: .utf8), "chunk1")
     }
 
     func testDoneSentinel() {
@@ -52,38 +53,42 @@ final class SSEParserTests: XCTestCase {
         XCTAssertNil(parser.jsonData)
     }
 
-    func testMultipleDataFieldsJoinWithNewline() {
+    func testMultipleDataFieldsJoinWithNewline() throws {
         var parser = SSEParser()
         let frames = parser.parse(data("data: line1\ndata: line2\n\n"))
 
         XCTAssertEqual(frames.count, 1)
-        XCTAssertEqual(String(data: frames[0].jsonData!, encoding: .utf8), "line1\nline2")
+        let unwrapped = try XCTUnwrap(frames[0].jsonData)
+        XCTAssertEqual(String(data: unwrapped, encoding: .utf8), "line1\nline2")
     }
 
-    func testCRLFLineEndings() {
+    func testCRLFLineEndings() throws {
         var parser = SSEParser()
         let frames = parser.parse(data("data: crlf\r\n\r\n"))
 
         XCTAssertEqual(frames.count, 1)
-        XCTAssertEqual(String(data: frames[0].jsonData!, encoding: .utf8), "crlf")
+        let unwrapped = try XCTUnwrap(frames[0].jsonData)
+        XCTAssertEqual(String(data: unwrapped, encoding: .utf8), "crlf")
     }
 
-    func testBadJSONPayloadIsStillCarriedRaw() {
+    func testBadJSONPayloadIsStillCarriedRaw() throws {
         var parser = SSEParser()
         let frames = parser.parse(data("data: not valid json\n\n"))
 
         XCTAssertEqual(frames.count, 1)
         // SSEParser transports the payload verbatim; JSON validation is the
         // adapter's job, which surfaces invalidJSON there.
-        XCTAssertEqual(String(data: frames[0].jsonData!, encoding: .utf8), "not valid json")
+        let unwrapped = try XCTUnwrap(frames[0].jsonData)
+        XCTAssertEqual(String(data: unwrapped, encoding: .utf8), "not valid json")
     }
 
-    func testEmptyDataFramesAreSkipped() {
+    func testEmptyDataFramesAreSkipped() throws {
         var parser = SSEParser()
         let frames = parser.parse(data("data:\n\ndata: real\n\n"))
 
         XCTAssertEqual(frames.count, 1)
-        XCTAssertEqual(String(data: frames[0].jsonData!, encoding: .utf8), "real")
+        let unwrapped = try XCTUnwrap(frames[0].jsonData)
+        XCTAssertEqual(String(data: unwrapped, encoding: .utf8), "real")
     }
 
     func testEventFieldIsCaptured() {

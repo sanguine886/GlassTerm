@@ -4,7 +4,7 @@ import XCTest
 final class AuditLogTests: XCTestCase {
     func testRecordAndEntriesRoundTrip() async {
         let log = InMemoryAuditLog()
-        let now = Date(timeIntervalSince1970: 1700000000)
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
         let entry = AuditEntry(
             timestamp: now,
             toolName: "run_command",
@@ -30,7 +30,7 @@ final class AuditLogTests: XCTestCase {
 
     func testRecordAppendsInOrder() async {
         let log = InMemoryAuditLog()
-        for index in 0..<3 {
+        for index in 0 ..< 3 {
             await log.record(
                 AuditEntry(
                     timestamp: Date(),
@@ -62,13 +62,13 @@ final class AuditLogTests: XCTestCase {
                 outcome: .denied
             )
         )
-        XCTAssertEqual(await log.entries().count, 1)
+        await XCTAssertEqual(log.entries().count, 1)
         await log.clear()
-        XCTAssertEqual(await log.entries().count, 0)
+        await XCTAssertEqual(log.entries().count, 0)
     }
 
     func testInitialStateEmpty() async {
         let log = InMemoryAuditLog()
-        XCTAssertEqual(await log.entries().count, 0)
+        await XCTAssertEqual(log.entries().count, 0)
     }
 }

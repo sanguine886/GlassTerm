@@ -76,11 +76,11 @@ public enum AIProviderAdapterFactory {
     ) -> any AIChatStreaming {
         switch kind {
         case .openAICompatible:
-            return OpenAICompatibleAdapter(config: config, apiKey: apiKey, http: http, retryPolicy: retryPolicy)
+            OpenAICompatibleAdapter(config: config, apiKey: apiKey, http: http, retryPolicy: retryPolicy)
         case .anthropic:
-            return AnthropicAdapter(config: config, apiKey: apiKey, http: http, retryPolicy: retryPolicy)
+            AnthropicAdapter(config: config, apiKey: apiKey, http: http, retryPolicy: retryPolicy)
         case .gemini:
-            return GeminiAdapter(config: config, apiKey: apiKey, http: http, retryPolicy: retryPolicy)
+            GeminiAdapter(config: config, apiKey: apiKey, http: http, retryPolicy: retryPolicy)
         }
     }
 }

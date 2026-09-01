@@ -33,7 +33,7 @@ public struct GeminiAdapter: AIChatStreaming {
     ) async throws -> AsyncThrowingStream<ChatStreamEvent, Error> {
         let url = try Self.streamGenerateContentURL(model: request.model, baseURL: config.baseURL)
         return AsyncThrowingStream<ChatStreamEvent, Error>(bufferingPolicy: .unbounded) { continuation in
-            let task = Task { await self.run(request: request, url: url, continuation: continuation) }
+            let task = Task { await run(request: request, url: url, continuation: continuation) }
             continuation.onTermination = { _ in task.cancel() }
         }
     }

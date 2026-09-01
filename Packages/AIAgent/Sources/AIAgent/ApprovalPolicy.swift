@@ -73,7 +73,7 @@ public struct ApprovalDecider: ApprovalDeciding, Sendable {
             case .alwaysAsk:
                 return .requireReview
             case .autoReview:
-                if modelDeclaredSafe && isReadonlyTool {
+                if modelDeclaredSafe, isReadonlyTool {
                     return .autoApprove
                 }
                 return .requireReview

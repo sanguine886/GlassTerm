@@ -36,7 +36,13 @@ final class OpenAICompatibleAdapterTests: XCTestCase {
         XCTAssertNotNil(request.value(forHTTPHeaderField: "Idempotency-Key"), "an idempotency key must be attached so retries are de-duplicated")
         XCTAssertEqual(request.value(forHTTPHeaderField: "Idempotency-Key")?.count, 36)
 
-        XCTAssertEqual(events.filter { if case .content = $0 { return true } else { return false } }.count, 1)
+        XCTAssertEqual(events.filter {
+            if case .content = $0 {
+                true
+            } else {
+                false
+            }
+        }.count, 1)
         XCTAssertEqual(events.last, .done)
     }
 
@@ -179,6 +185,6 @@ final class OpenAICompatibleAdapterTests: XCTestCase {
         }.joined()
         XCTAssertEqual(text, "ok")
         XCTAssertEqual(events.last, .done)
-        XCTAssertEqual(await fake.calls, 2, "network failure must be retried once")
+        await XCTAssertEqual(fake.calls, 2, "network failure must be retried once")
     }
 }

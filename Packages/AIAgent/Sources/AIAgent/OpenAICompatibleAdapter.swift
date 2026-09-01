@@ -34,9 +34,9 @@ public struct OpenAICompatibleAdapter: AIChatStreaming {
         // One idempotency key per logical turn; retries reuse it so the vendor
         // can de-duplicate restarted requests (spec §4.5).
         let idempotencyKey = UUID().uuidString
-        let stream = AsyncThrowingStream<ChatStreamEvent, Error>(bufferingPolicy: .unbounded) { continuation in
+        return AsyncThrowingStream<ChatStreamEvent, Error>(bufferingPolicy: .unbounded) { continuation in
             let task = Task {
-                await self.run(
+                await run(
                     request: request,
                     url: url,
                     idempotencyKey: idempotencyKey,
@@ -45,7 +45,6 @@ public struct OpenAICompatibleAdapter: AIChatStreaming {
             }
             continuation.onTermination = { _ in task.cancel() }
         }
-        return stream
     }
 
     // MARK: - Internals
@@ -310,7 +309,7 @@ public struct OpenAICompatibleAdapter: AIChatStreaming {
             throw AIProviderError.invalidJSON(String(data: data, encoding: .utf8) ?? "<binary>")
         }
 
-        var delta: OpenAIDelta = OpenAIDelta()
+        var delta = OpenAIDelta()
         if let rawDelta = choice["delta"] as? [String: Any] {
             delta.content = rawDelta["content"] as? String
             if let toolCalls = rawDelta["tool_calls"] as? [[String: Any]] {

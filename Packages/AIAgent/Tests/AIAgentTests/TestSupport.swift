@@ -75,7 +75,7 @@ actor NeverFailingTransport: HTTPStreamingTransport {
         return (200, stream)
     }
 
-    func data(for request: URLRequest) async throws -> (statusCode: Int, Data) {
+    func data(for _: URLRequest) async throws -> (statusCode: Int, Data) {
         calls += 1
         return (200, Data())
     }

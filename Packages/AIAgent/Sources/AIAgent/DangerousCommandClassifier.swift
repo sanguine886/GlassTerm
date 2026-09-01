@@ -243,6 +243,7 @@ public struct DangerousCommandClassifier: Sendable {
     }
 
     // MARK: - Pattern cache
+
     // Compiled-regular-expression cache. `nonisolated(unsafe)` is deliberate:
     // the cache is guarded by `lock` at every access, and `NSRegularExpression`
     // is thread-safe, so the static storage can be shared across the

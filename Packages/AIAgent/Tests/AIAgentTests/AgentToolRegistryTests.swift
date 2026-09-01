@@ -19,7 +19,7 @@ private final class EchoExecutor: AgentToolExecutor, @unchecked Sendable {
 final class AgentToolRegistryTests: XCTestCase {
     func testDefaultToolSetHasAtLeastSevenTools() {
         XCTAssertGreaterThanOrEqual(AgentToolRegistry.defaultToolDefinitions.count, 7)
-        let names = Set(AgentToolRegistry.defaultToolDefinitions.map { $0.name })
+        let names = Set(AgentToolRegistry.defaultToolDefinitions.map(\.name))
         XCTAssertTrue(names.contains("run_command"))
         XCTAssertTrue(names.contains("read_file"))
         XCTAssertTrue(names.contains("write_file"))
