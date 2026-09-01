@@ -99,7 +99,8 @@ jobs:
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
             -enableCodeCoverage YES \
             -derivedDataPath build/DerivedData \
-            2>&1 | xcbeautify --quiet
+            2>&1 | tee build/test.log | xcbeautify \
+            || (echo "=== raw xcodebuild tail ===" && tail -80 build/test.log && exit 1)
 
       - name: Coverage gate — Persistence ≥ 60% (ADR-0005)
         run: |
