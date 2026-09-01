@@ -86,7 +86,7 @@ public final class CitadelSFTP: SFTPService, @unchecked Sendable {
     public func readFile(at path: String) async throws -> Data {
         // `withFile` opens and always closes the handle, avoiding a detached
         // close Task that would capture the non-Sendable `SFTPFile` (Swift 6).
-        return try await client.withFile(filePath: path, flags: .read) { file in
+        try await client.withFile(filePath: path, flags: .read) { file in
             let buffer = try await file.readAll()
             return buffer.withUnsafeReadableBytes { Data($0) }
         }

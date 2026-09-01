@@ -8,8 +8,12 @@ import Foundation
     /// Bridges an SSH PTY (`ShellStreams` from CoreSSH) to a SwiftTerm
     /// `TerminalView` (spec §4.3). All interaction happens on the main actor:
     /// SwiftTerm views are UIKit-backed and the shell writer is thread-safe.
+    ///
+    /// `@preconcurrency` on the conformance is intentional: SwiftTerm's
+    /// `TerminalViewDelegate` is not annotated for concurrency, so Swift 6
+    /// would otherwise reject main-actor-isolated requirements.
     @MainActor
-    public final class TerminalSession: TerminalViewDelegate {
+    public final class TerminalSession: @preconcurrency TerminalViewDelegate {
         public let terminalView: TerminalView
         public private(set) var title: String = ""
         public private(set) var currentDirectory: String?
@@ -39,9 +43,9 @@ import Foundation
             terminalView.terminalDelegate = self
             applyStyle()
 
-            outputTask = Task { [weak self] in
+            outputTask = Task { @MainActor [weak self] in
                 for await event in shell.output {
-                    await self?.handle(event)
+                    self?.handle(event)
                 }
             }
         }
@@ -54,12 +58,12 @@ import Foundation
         private func handle(_ event: ShellEvent) {
             switch event {
             case let .stdout(data):
-                terminalView.feed(byteArray: data)
+                terminalView.feed(byteArray: Array(data)[0..<data.count])
                 if TmuxDetector.containsTmuxMarker(in: data) {
                     onTmuxDetected?()
                 }
             case let .stderr(data):
-                terminalView.feed(byteArray: data)
+                terminalView.feed(byteArray: Array(data)[0..<data.count])
             case .exited:
                 break
             }

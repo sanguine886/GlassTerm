@@ -57,7 +57,7 @@ public struct TerminalTheme: Equatable, Sendable, Codable {
             background: TerminalRGBA(hex: background),
             foreground: TerminalRGBA(hex: foreground),
             cursor: TerminalRGBA(hex: cursor),
-            ansi: ansi.map(TerminalRGBA.init(hex:))
+            ansi: ansi.map { TerminalRGBA(hex: $0) }
         )
     }
 
