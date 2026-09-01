@@ -37,4 +37,3 @@ final class SFTPPathTests: XCTestCase {
         XCTAssertEqual(SFTPPath.normalized("etc/passwd"), "etc/passwd")
     }
 }
-

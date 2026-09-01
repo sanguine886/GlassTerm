@@ -28,4 +28,3 @@ final class SFTPKindTests: XCTestCase {
         XCTAssertEqual(CitadelSFTP.kind(of: component("???", permissions: nil)), .unknown)
     }
 }
-
