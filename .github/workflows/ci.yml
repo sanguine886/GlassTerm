@@ -49,6 +49,35 @@ jobs:
           set -euo pipefail
           swift test --package-path Packages/TerminalKit 2>&1
 
+      - name: Persistence logic tests (swift test)
+        run: |
+          set -euo pipefail
+          swift test --package-path Packages/Persistence --enable-code-coverage 2>&1
+
+      - name: Coverage gate — Persistence ≥ 60% (ADR-0005, swift test)
+        run: |
+          set -euo pipefail
+          profdata=$(find Packages/Persistence/.build -name "*.profdata" | head -1)
+          if [ -z "${profdata}" ]; then
+            echo "No profdata found for Persistence"; exit 1
+          fi
+          binary=$(find Packages/Persistence/.build -type f -name "PersistencePackageTests" | head -1)
+          if [ -z "${binary}" ]; then
+            echo "No PersistencePackageTests binary found"; exit 1
+          fi
+          xcrun llvm-cov report -instr-profile "${profdata}" "${binary}" \
+            -ignore-filename-regex "(Tests/|\.build/checkouts/)" \
+            > /tmp/persistence_cov.txt
+          python3 - <<'PY'
+          import re, sys
+          text = open('/tmp/persistence_cov.txt').read()
+          total = [l for l in text.splitlines() if l.strip().startswith('TOTAL')][-1]
+          cov = float(re.findall(r'([\d.]+)%', total)[-1])
+          print(total.strip())
+          print(f'Persistence line coverage: {cov:.1f}%')
+          sys.exit(0 if cov >= 60.0 else 1)
+          PY
+
       - name: Coverage gate — CoreSSH ≥ 60% (ADR-0005)
         run: |
           set -euo pipefail
@@ -103,34 +132,6 @@ jobs:
             -skipPackagePluginValidation \
             2>&1 | tee build/test.log | xcbeautify \
             || (echo "=== raw xcodebuild tail ===" && tail -80 build/test.log && exit 1)
-
-      - name: Coverage gate — Persistence ≥ 60% (ADR-0005)
-        run: |
-          set -euo pipefail
-          xcresult=$(find build/DerivedData/Logs/Test -maxdepth 1 -name "*.xcresult" | head -1)
-          if [ -z "${xcresult}" ]; then
-            echo "No xcresult found for app tests"; exit 1
-          fi
-          xcrun xccov view --report --json "${xcresult}" > /tmp/app_cov.json
-          python3 - <<'PY'
-          import json, sys
-          data = json.load(open('/tmp/app_cov.json'))
-          if isinstance(data, dict):
-              targets = data.get('coverage', {}).get('targets') or data.get('targets') or []
-          else:
-              targets = data
-          print('Targets:', [(t['name'], round(t['lineCoverage'], 2)) for t in targets])
-          # SPM packages are compiled into the GlassTerm.app binary, so
-          # Persistence coverage is the sum of its sources under any target.
-          files = [f for t in targets for f in t.get('files', []) if '/Packages/Persistence/' in f.get('path', '')]
-          if not files:
-              print('No Persistence sources found in coverage report'); sys.exit(1)
-          covered = sum(f['coveredLines'] for f in files)
-          executable = sum(f['executableLines'] for f in files)
-          ratio = covered / executable if executable else 0
-          print(f"Persistence line coverage: {ratio:.1%} ({covered}/{executable})")
-          sys.exit(0 if ratio >= 0.60 else 1)
-          PY
 
       - name: Coverage report
         if: always()
