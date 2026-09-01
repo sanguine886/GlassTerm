@@ -185,6 +185,7 @@ final class OpenAICompatibleAdapterTests: XCTestCase {
         }.joined()
         XCTAssertEqual(text, "ok")
         XCTAssertEqual(events.last, .done)
-        await XCTAssertEqual(fake.calls, 2, "network failure must be retried once")
+        let callCount = await fake.calls
+        XCTAssertEqual(callCount, 2, "network failure must be retried once")
     }
 }

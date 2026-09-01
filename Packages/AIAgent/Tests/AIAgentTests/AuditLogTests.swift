@@ -62,13 +62,16 @@ final class AuditLogTests: XCTestCase {
                 outcome: .denied
             )
         )
-        await XCTAssertEqual(log.entries().count, 1)
+        let recorded = await log.entries().count
+        XCTAssertEqual(recorded, 1)
         await log.clear()
-        await XCTAssertEqual(log.entries().count, 0)
+        let cleared = await log.entries().count
+        XCTAssertEqual(cleared, 0)
     }
 
     func testInitialStateEmpty() async {
         let log = InMemoryAuditLog()
-        await XCTAssertEqual(log.entries().count, 0)
+        let count = await log.entries().count
+        XCTAssertEqual(count, 0)
     }
 }
