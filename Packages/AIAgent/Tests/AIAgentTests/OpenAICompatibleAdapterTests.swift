@@ -73,8 +73,6 @@ final class OpenAICompatibleAdapterTests: XCTestCase {
     }
 
     func testToolCallFragmentsAggregateByIndex() async throws {
-        // Build each SSE frame with JSONSerialization so argument fragments are
-        // guaranteed valid JSON strings (no hand-rolled escaping).
         func sse(withDelta dict: [String: Any]) -> String {
             let data = (try? JSONSerialization.data(withJSONObject: dict)) ?? Data()
             return "data: " + (String(data: data, encoding: .utf8) ?? "") + "\n\n"
