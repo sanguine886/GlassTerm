@@ -73,22 +73,34 @@ final class OpenAICompatibleAdapterTests: XCTestCase {
     }
 
     func testToolCallFragmentsAggregateByIndex() async throws {
-        let rawCalls = [
-            // First chunk: ids + names + first argument fragments.
-            #"{"choices":[{"delta":{"tool_calls":["# +
-                #"{"index":0,"id":"call_1","type":"function","function":{"name":"run_command","arguments":"{\"com"}},"# +
-                #"{"index":1,"id":"call_2","type":"function","function":{"name":"read_file","arguments":"{\"pat"}}]}}]}"#,
-            // Continuation for both.
-            #"{"choices":[{"delta":{"tool_calls":["# +
-                #"{"index":0,"function":{"arguments":"mand\":\"ls -la\"}"}},"# +
-                #"{"index":1,"function":{"arguments":"h\":\"/etc/passwd\"}"}}]}}]"#,
-            // Finish reason chunk.
-            #"{"choices":[{"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":10,"completion_tokens":5,"total_tokens":15}}"#,
-        ]
+        // Build each SSE frame with JSONSerialization so argument fragments are
+        // guaranteed valid JSON strings (no hand-rolled escaping).
+        func sse(withDelta dict: [String: Any]) -> String {
+            let data = (try? JSONSerialization.data(withJSONObject: dict)) ?? Data()
+            return "data: " + (String(data: data, encoding: .utf8) ?? "") + "\n\n"
+        }
         let frames = [
-            sseRaw(rawCalls[0]),
-            sseRaw(rawCalls[1]),
-            sseRaw(rawCalls[2]) + sseRaw("[DONE]"),
+            sse(withDelta: [
+                "choices": [[
+                    "delta": [
+                        "tool_calls": [
+                            ["index": 0, "id": "call_1", "type": "function", "function": ["name": "run_command", "arguments": "{\"com"]],
+                            ["index": 1, "id": "call_2", "type": "function", "function": ["name": "read_file", "arguments": "{\"pat"]],
+                        ],
+                    ],
+                ]],
+            ]),
+            sse(withDelta: [
+                "choices": [[
+                    "delta": [
+                        "tool_calls": [
+                            ["index": 0, "function": ["arguments": "mand\":\"ls -la\"}"]],
+                            ["index": 1, "function": ["arguments": "h\":\"/etc/passwd\"}"]],
+                        ],
+                    ],
+                ]],
+            ]),
+            sse(withDelta: ["choices": [["delta": [:], "finish_reason": "stop"]], "usage": ["prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15]]) + sseRaw("[DONE]"),
         ]
         let fake = FakeHTTPStreamingTransport([.init(statusCode: 200, chunks: chunkStream(frames))])
         let adapter = OpenAICompatibleAdapter(config: testConfig, apiKey: testAPIKey, http: fake)
