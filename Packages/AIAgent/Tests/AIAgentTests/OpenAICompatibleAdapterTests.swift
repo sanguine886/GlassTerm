@@ -75,13 +75,9 @@ final class OpenAICompatibleAdapterTests: XCTestCase {
     func testToolCallFragmentsAggregateByIndex() async throws {
         let rawCalls = [
             // First chunk: ids + names + first argument fragments.
-            #"{"choices":[{"delta":{"tool_calls":["# +
-                #"{"index":0,"id":"call_1","type":"function","function":{"name":"run_command","arguments":"{\"com"}},"# +
-                #"{"index":1,"id":"call_2","type":"function","function":{"name":"read_file","arguments":"{\"pat"}}]}}]}"#,
+            #"{"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_1","type":"function","function":{"name":"run_command","arguments":"{\"com"}},{"index":1,"id":"call_2","type":"function","function":{"name":"read_file","arguments":"{\"pat"}}]}}]}"#,
             // Continuation for both.
-            #"{"choices":[{"delta":{"tool_calls":["# +
-                #"{"index":0,"function":{"arguments":"mand\":\"ls -la\"}},"# +
-                #"{"index":1,"function":{"arguments":"h\":\"/etc/passwd\"}"}}]}}]"#,
+            #"{"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"mand\":\"ls -la\"}"}},{"index":1,"function":{"arguments":"h\":\"/etc/passwd\"}"}}]}}]"#,
             // Finish reason chunk.
             #"{"choices":[{"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":10,"completion_tokens":5,"total_tokens":15}}"#,
         ]

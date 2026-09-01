@@ -198,11 +198,11 @@ public struct GeminiAdapter: AIChatStreaming {
             case .system:
                 systemPreamble = (systemPreamble ?? "") + message.content
             case .user:
-                contents.append(Self.geminiContent(role: "user", parts: [.string(message.content)]))
+                contents.append(Self.geminiContent(role: "user", parts: [.object(["text": .string(message.content)])]))
             case .assistant:
                 var parts: [JSONValue] = []
                 if !message.content.isEmpty {
-                    parts.append(.string(message.content))
+                    parts.append(.object(["text": .string(message.content)]))
                 }
                 for call in message.toolCalls {
                     let args: JSONValue = Self.parseArgumentsJSON(call.argumentsJSON) ?? .object([:])
@@ -337,7 +337,7 @@ public struct GeminiAdapter: AIChatStreaming {
 
     static func serializeJSON(_ value: Any) -> String? {
         guard JSONSerialization.isValidJSONObject(value) else { return nil }
-        guard let data = try? JSONSerialization.data(withJSONObject: value) else { return nil }
+        guard let data = try? JSONSerialization.data(withJSONObject: value, options: [.withoutEscapingSlashes]) else { return nil }
         return String(data: data, encoding: .utf8)
     }
 

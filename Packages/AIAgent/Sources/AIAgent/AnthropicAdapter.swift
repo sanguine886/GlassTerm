@@ -249,6 +249,11 @@ public struct AnthropicAdapter: AIChatStreaming {
         ]
         if let systemPrompt = request.systemPrompt, !systemPrompt.isEmpty {
             payload["system"] = .string(systemPrompt)
+        } else if let firstSystem = request.messages.first(where: { $0.role == .system })?.content, !firstSystem.isEmpty {
+            // Anthropic requires the system prompt at the top level. Adapters
+            // may carry it via `request.systemPrompt`; fall back to the leading
+            // `.system` message so callers that compose messages only still work.
+            payload["system"] = .string(firstSystem)
         }
         if !request.tools.isEmpty {
             payload["tools"] = .array(request.tools.map(Self.encodeTool))
