@@ -61,7 +61,9 @@ jobs:
           if [ -z "${profdata}" ]; then
             echo "No profdata found for AIAgent"; exit 1
           fi
-          binary=$(find Packages/AIAgent/.build -type f -name "AIAgentPackageTests" -not -path "*xctest*" | head -1)
+          # The test binary lives inside AIAgentPackageTests.xctest/Contents/MacOS/;
+          # exclude the sibling .dSYM DWARF file (not a coverage-able Mach-O).
+          binary=$(find Packages/AIAgent/.build -type f -name "AIAgentPackageTests" -not -path "*dSYM*" | head -1)
           if [ -z "${binary}" ]; then
             echo "No AIAgentPackageTests binary found"; exit 1
           fi
@@ -90,7 +92,7 @@ jobs:
           if [ -z "${profdata}" ]; then
             echo "No profdata found for Persistence"; exit 1
           fi
-          binary=$(find Packages/Persistence/.build -type f -name "PersistencePackageTests" | head -1)
+          binary=$(find Packages/Persistence/.build -type f -name "PersistencePackageTests" -not -path "*dSYM*" | head -1)
           if [ -z "${binary}" ]; then
             echo "No PersistencePackageTests binary found"; exit 1
           fi
@@ -115,7 +117,7 @@ jobs:
           if [ -z "${profdata}" ]; then
             echo "No profdata found for CoreSSH"; exit 1
           fi
-          binary=$(find Packages/CoreSSH/.build -type f -name "CoreSSHPackageTests" | head -1)
+          binary=$(find Packages/CoreSSH/.build -type f -name "CoreSSHPackageTests" -not -path "*dSYM*" | head -1)
           if [ -z "${binary}" ]; then
             echo "No CoreSSHPackageTests binary found"; exit 1
           fi
