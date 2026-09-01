@@ -66,7 +66,7 @@ public final class CitadelSFTP: SFTPService, @unchecked Sendable {
 
     /// Infers entry kind from the Unix mode type bits (S_IFMT) in
     /// `attributes.permissions`, falling back to the `longname` ls-style prefix.
-    private static func kind(of entry: SFTPPathComponent) -> SFTPEntry.Kind {
+    static func kind(of entry: SFTPPathComponent) -> SFTPEntry.Kind {
         if let mode = entry.attributes.permissions {
             switch mode & 0xF000 {
             case 0x4000: return .directory
