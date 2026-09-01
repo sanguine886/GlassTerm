@@ -84,17 +84,19 @@ public final class CitadelSFTP: SFTPService, @unchecked Sendable {
     }
 
     public func readFile(at path: String) async throws -> Data {
-        let file = try await client.openFile(filePath: path, flags: .read)
-        defer { Task { try? await file.close() } }
-        let buffer = try await file.readAll()
-        return buffer.withUnsafeReadableBytes { Data($0) }
+        // `withFile` opens and always closes the handle, avoiding a detached
+        // close Task that would capture the non-Sendable `SFTPFile` (Swift 6).
+        return try await client.withFile(filePath: path, flags: .read) { file in
+            let buffer = try await file.readAll()
+            return buffer.withUnsafeReadableBytes { Data($0) }
+        }
     }
 
     public func writeFile(data: Data, to path: String) async throws {
-        let file = try await client.openFile(filePath: path, flags: [.write, .create, .truncate])
-        defer { Task { try? await file.close() } }
-        var buffer = ByteBuffer(bytes: data)
-        _ = try await file.write(buffer, at: 0)
+        try await client.withFile(filePath: path, flags: [.write, .create, .truncate]) { file in
+            var buffer = ByteBuffer(bytes: data)
+            _ = try await file.write(buffer, at: 0)
+        }
     }
 
     public func delete(at path: String, isDirectory: Bool) async throws {
