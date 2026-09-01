@@ -8,6 +8,7 @@ struct TerminalSessionsView: View {
         NavigationStack {
             SnippetsListView()
                 .background(Color.glassBackground.ignoresSafeArea())
+                .accessibilityIdentifier("screen.terminal.heading")
         }
     }
 }

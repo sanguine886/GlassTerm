@@ -22,6 +22,7 @@ struct SettingsView: View {
                 .padding(GlassSpacing.lg)
             }
         }
+        .accessibilityIdentifier("screen.settings.heading")
     }
 
     private var terminalSection: some View {
