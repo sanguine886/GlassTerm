@@ -155,9 +155,10 @@ final class AgentLoopTests: XCTestCase {
             explanation: nil
         )
         try await loop.continueAfterApproval(proposal: proposal, editedCommand: nil)
-        let host = fixture.host
-        let runs = await host.runs
-        XCTAssertEqual(runs, ["df -h"])
+        let audit = fixture.audit
+        let entries = await audit.entries()
+        XCTAssertEqual(entries.count, 1, "approved tool run must be recorded in audit")
+        XCTAssertEqual(entries[0].outcome, .userApproved)
     }
 
     @MainActor

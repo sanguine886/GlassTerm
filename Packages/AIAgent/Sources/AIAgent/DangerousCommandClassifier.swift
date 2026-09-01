@@ -114,7 +114,6 @@ public struct DangerousCommandClassifier: Sendable {
     ]
 
     public static let ruleSet: [DangerRule] = [
-        DangerRule(id: "rm-recursive-force", pattern: #"rm\s+(-{1,2}[a-z]*)?r[a-z]*f\b"#, severity: .dangerous, summary: "Any rm -rf recursive force delete"),
         DangerRule(id: "rm-no-preserve-root", pattern: #"rm\s+.*--no-preserve-root"#, severity: .critical, summary: "Delete bypassing root protection"),
         DangerRule(id: "rm-rf-root-variable", pattern: #"rm\s+(-{1,2}[a-z]*)?r[a-z]*f\s+(\$|/)"#, severity: .critical, summary: "rm -rf to root or a variable"),
         DangerRule(
@@ -123,6 +122,7 @@ public struct DangerousCommandClassifier: Sendable {
             severity: .dangerous,
             summary: "rm -rf home directory or current directory"
         ),
+        DangerRule(id: "rm-recursive-force", pattern: #"rm\s+(-{1,2}[a-z]*)?r[a-z]*f\b"#, severity: .dangerous, summary: "Any rm -rf recursive force delete"),
         DangerRule(id: "rm-auth-files", pattern: #"\brm\s+/etc/(passwd|shadow|sudoers)"#, severity: .critical, summary: "Delete system authentication files"),
         DangerRule(id: "mkfs", pattern: #"(\bmkfs|mkfs\.\w+)\s"#, severity: .dangerous, summary: "Format a filesystem"),
         DangerRule(id: "mkswap", pattern: #"\bmkswap"#, severity: .dangerous, summary: "Create swap space"),
@@ -151,7 +151,7 @@ public struct DangerousCommandClassifier: Sendable {
             summary: "Permission catastrophe in current directory"
         ),
         DangerRule(id: "chattr-lock-etc", pattern: #"\bchattr\s+.*\+i\s+/etc"#, severity: .dangerous, summary: "Lock system configuration"),
-        DangerRule(id: "fork-bomb", pattern: #":\(\)\{\s*\|"#, severity: .critical, summary: "Fork bomb"),
+        DangerRule(id: "fork-bomb", pattern: #":\(\)\{\s*.*\|"#, severity: .critical, summary: "Fork bomb"),
         DangerRule(id: "sql-drop", pattern: #"\bDROP\s+(TABLE|DATABASE)\b"#, severity: .critical, summary: "SQL drop table or database"),
         DangerRule(id: "mongo-drop-database", pattern: #"\bdb\.dropDatabase\b"#, severity: .critical, summary: "MongoDB drop database"),
         DangerRule(id: "redis-flush", pattern: #"\bFLUSHALL\b|\bFLUSHDB\b"#, severity: .critical, summary: "Redis flush all keys"),
