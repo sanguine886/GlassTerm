@@ -49,6 +49,35 @@ jobs:
           set -euo pipefail
           swift test --package-path Packages/TerminalKit 2>&1
 
+      - name: AIAgent logic tests (swift test)
+        run: |
+          set -euo pipefail
+          swift test --package-path Packages/AIAgent --enable-code-coverage 2>&1
+
+      - name: Coverage gate — AIAgent ≥ 60% (ADR-0005, swift test)
+        run: |
+          set -euo pipefail
+          profdata=$(find Packages/AIAgent/.build -name "*.profdata" | head -1)
+          if [ -z "${profdata}" ]; then
+            echo "No profdata found for AIAgent"; exit 1
+          fi
+          binary=$(find Packages/AIAgent/.build -type f -name "AIAgentPackageTests" | head -1)
+          if [ -z "${binary}" ]; then
+            echo "No AIAgentPackageTests binary found"; exit 1
+          fi
+          xcrun llvm-cov report -instr-profile "${profdata}" "${binary}" \
+            -ignore-filename-regex "(Tests/|\.build/checkouts/)" \
+            > /tmp/aia_cov.txt
+          python3 - <<'PY'
+          import re, sys
+          text = open('/tmp/aia_cov.txt').read()
+          total = [l for l in text.splitlines() if l.strip().startswith('TOTAL')][-1]
+          cov = float(re.findall(r'([\d.]+)%', total)[-1])
+          print(total.strip())
+          print(f'AIAgent line coverage: {cov:.1f}%')
+          sys.exit(0 if cov >= 60.0 else 1)
+          PY
+
       - name: Persistence logic tests (swift test)
         run: |
           set -euo pipefail
