@@ -93,6 +93,7 @@ jobs:
       - name: Build & Test
         run: |
           set -euo pipefail
+          mkdir -p build
           xcodebuild test \
             -project GlassTerm.xcodeproj \
             -scheme GlassTerm \
