@@ -5,7 +5,7 @@ import XCTest
 /// Persistence is a standalone package that also lives inside the app, so its
 /// coverage is measured here via `swift test --package-path Packages/Persistence`
 /// (the app's xccov report omits package sources). These tests mirror the
-/// GlassTermTests assertions and add snippet coverage (ADR-0002/ADR-0005).
+/// GlazeVerreTests assertions and add snippet coverage (ADR-0002/ADR-0005).
 final class HostStoreTests: XCTestCase {
     func testCRUDRoundtripInMemory() throws {
         let container = try HostStore.makeContainer(inMemory: true)
@@ -260,7 +260,7 @@ final class KeychainStoreTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        store = KeychainStore(service: "com.glazeterm.tests.\(UUID().uuidString)")
+        store = KeychainStore(service: "com.glazeverre.tests.\(UUID().uuidString)")
     }
 
     func testSaveLoadRoundtrip() throws {

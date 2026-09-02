@@ -11,7 +11,7 @@ import Persistence
 @MainActor
 @Observable
 final class AgentRunner {
-    private static let logger = Logger(subsystem: "com.glazeterm.GlassTerm", category: "agent")
+    private static let logger = Logger(subsystem: "com.glazeverre.GlazeVerre", category: "agent")
 
     /// Where executed commands echo back (spec §4.6 double-view). A plain
     /// buffer suffices; the terminal layer may render it.

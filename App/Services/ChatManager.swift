@@ -24,7 +24,7 @@ struct ChatTurn: Identifiable, Sendable {
 @MainActor
 @Observable
 final class ChatManager {
-    private static let logger = Logger(subsystem: "com.glazeterm.GlassTerm", category: "chat")
+    private static let logger = Logger(subsystem: "com.glazeverre.GlazeVerre", category: "chat")
 
     private let chatStore: ChatSessionStore
     private let secrets: SecretStoring
@@ -177,7 +177,7 @@ final class ChatManager {
                 approvedWorkingDir: context.host.workingPaths.first
             )
         }
-        return "You are GlassTerm's AI assistant. Answer concisely with no markdown headers unless asked."
+        return "You are GlazeVerre's AI assistant. Answer concisely with no markdown headers unless asked."
     }
 
     // MARK: - Persistence

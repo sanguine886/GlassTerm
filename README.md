@@ -1,4 +1,4 @@
-# GlassTerm
+# GlazeVerre
 
 iOS 原生的、Liquid Glass 设计语言的、AI 可接管的 SSH 终端与服务器管理工具。
 
@@ -11,15 +11,15 @@ iOS 原生的、Liquid Glass 设计语言的、AI 可接管的 SSH 终端与服�
 
 ```sh
 brew install xcodegen
-xcodegen generate          # 生成 GlassTerm.xcodeproj（生成产物，勿手改）
-open GlassTerm.xcodeproj
+xcodegen generate          # 生成 GlazeVerre.xcodeproj（生成产物，勿手改）
+open GlazeVerre.xcodeproj
 ```
 
 CI 在 GitHub Actions（`macos-26`，Xcode 26，iPhone 16 Pro 模拟器）上运行 lint 与全量测试；详见 `.github/workflows/ci.yml`。
 
 ## 文档
 
-- [开发提示词](GlassTerm-开发提示词.md)（仓库根目录，唯一需求与规范来源）
+- [开发提示词](GlazeVerre-开发提示词.md)（仓库根目录，唯一需求与规范来源）
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) — 架构与 ADR
 - [SECURITY.md](docs/SECURITY.md) / [AI_AGENT.md](docs/AI_AGENT.md) / [TERMINAL.md](docs/TERMINAL.md)
 

@@ -1,11 +1,11 @@
-# GlassTerm 架构
+# GlazeVerre 架构
 
 > 本文与代码同步演进；结构性变更先改本文，再改代码（规范 §6.6.1）。
 > 每次依据「规范 > MaidKit > 通用最佳实践」顺序做出的裁量，以 ADR 记入文末附录。
 
 ## 1. 概述
 
-GlassTerm 是 iOS 26 原生 SwiftUI 应用：SSH 终端 + 服务器管理 + AI 运维助手。
+GlazeVerre 是 iOS 26 原生 SwiftUI 应用：SSH 终端 + 服务器管理 + AI 运维助手。
 架构三原则：**非侵入**（100% SSH，无服务端组件）、**手机优先**、**安全默认**
 （秘密只进 Keychain；AI 只能提案，执行必须经人审批）。
 
@@ -42,7 +42,7 @@ Packages/
 ```sh
 swiftlint --quiet && swiftformat --lint .
 swift test --package-path Packages/CoreSSH --enable-code-coverage   # 引擎单测（macOS）
-xcodebuild test -project GlassTerm.xcodeproj -scheme GlassTerm \
+xcodebuild test -project GlazeVerre.xcodeproj -scheme GlazeVerre \
   -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
   -enableCodeCoverage YES
 ```
@@ -53,7 +53,7 @@ CI（`.github/workflows/ci.yml`）在 `macos-26`（Xcode 26，iOS 26 SDK）上�
 
 ## 5. 生成物纪律
 
-- `GlassTerm.xcodeproj` 由 XcodeGen 生成，**不入库、不手改**；
+- `GlazeVerre.xcodeproj` 由 XcodeGen 生成，**不入库、不手改**；
 - `App/Info.plist` 由 XcodeGen 从 `project.yml` 的 `info:` 块生成，不入库；
 - SwiftData 宏展开同理（落地后）。
 
@@ -72,7 +72,7 @@ CI（`.github/workflows/ci.yml`）在 `macos-26`（Xcode 26，iOS 26 SDK）上�
 |---|---|
 | ADR-0001 | 工程文件用 XcodeGen 从 `project.yml` 生成，产物 gitignore，本地与 CI 均先 `xcodegen generate` |
 | ADR-0002 | 依赖精确版本（exactVersion）锁定自首次引入生效：P1 锁定上表四个依赖，即「依赖锁定」交付物的落地方式 |
-| ADR-0003 | 单测分两处：CoreSSH 引擎测试放包内 `CoreSSHTests`（`swift test`，需 NIO/NIOSSH 类型构造真实校验握手），其余在宿主 App 的 `GlassTermTests` / `GlassTermUITests`（仅依赖公开 API） |
+| ADR-0003 | 单测分两处：CoreSSH 引擎测试放包内 `CoreSSHTests`（`swift test`，需 NIO/NIOSSH 类型构造真实校验握手），其余在宿主 App 的 `GlazeVerreTests` / `GlazeVerreUITests`（仅依赖公开 API） |
 | ADR-0004 | `maidkit_ref/` 为本地只读精读副本，不入公共仓库（第三方代码再分发的许可风险），在 .gitignore 固定 |
 | ADR-0005 | 覆盖率 ≥60% 硬门槛自 P1 起在 CI 启用（CoreSSH 与 Persistence 分别断言）；P0 只采集不设门 |
 | ADR-0006 | 颜色令牌直接映射系统语义色（label / secondaryLabel / systemBackground 等），深浅色对比度由系统保证，不自绘调色板 |

@@ -1,4 +1,4 @@
-# 开发提示词:GlassTerm —— iOS Liquid Glass 风格 SSH 终端管理软件
+# 开发提示词:GlazeVerre —— iOS Liquid Glass 风格 SSH 终端管理软件
 
 > 使用方式:将本文档整体作为开发启动指令(系统提示词/需求基线)交给开发方(人类团队或 AI 编码代理)。
 > 开发过程中本文档是唯一需求与规范来源;冲突时以本文档为准。修改规范必须先修订本文档,再动代码。
@@ -7,7 +7,7 @@
 
 ## 0. 你的角色与使命
 
-你是一名资深 iOS 工程师,负责从零构建一款 iPhone 上的远程服务器管理软件:**GlassTerm(暂定名)**。
+你是一名资深 iOS 工程师,负责从零构建一款 iPhone 上的远程服务器管理软件:**GlazeVerre(暂定名)**。
 
 它是一款 **SSH 终端 + 服务器管理 + AI 运维助手** 三位一体的原生 iOS 应用:
 
@@ -89,7 +89,7 @@
 ### 3.3 工程结构(固定)
 
 ```
-GlassTerm/
+GlazeVerre/
   App/                      # App 入口、根 Tab、路由
   Packages/
     GlassKit/               # Liquid Glass 设计系统:令牌、玻璃组件、动效
@@ -216,7 +216,7 @@ GlassTerm/
 1. 每阶段退出前必须全绿:
    ```sh
    swiftlint && swiftformat --lint .
-   xcodebuild test -scheme GlassTerm -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
+   xcodebuild test -scheme GlazeVerre -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
    ```
 2. 单测底线:`CoreSSH` 连接管理/known-hosts/重连逻辑、`AIAgent` 审批策略/危险命令分类器/工具回路(fake provider 注入)、`Persistence` 秘密隔离断言,**行覆盖 ≥ 60%**;
 3. UI 层为关键流程(新建主机→连接→执行命令→AI 审批放行)编写自动化冒烟;

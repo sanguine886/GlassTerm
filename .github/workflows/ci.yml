@@ -182,8 +182,8 @@ jobs:
           set -euo pipefail
           mkdir -p build
           xcodebuild test \
-            -project GlassTerm.xcodeproj \
-            -scheme GlassTerm \
+            -project GlazeVerre.xcodeproj \
+            -scheme GlazeVerre \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
             -enableCodeCoverage YES \
             -derivedDataPath build/DerivedData \
@@ -226,8 +226,8 @@ jobs:
           set -euo pipefail
           mkdir -p build
           xcodebuild build \
-            -project GlassTerm.xcodeproj \
-            -scheme GlassTerm \
+            -project GlazeVerre.xcodeproj \
+            -scheme GlazeVerre \
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -derivedDataPath build/ipa \
@@ -240,15 +240,15 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p build/Payload
-          ditto "build/ipa/Build/Products/Release-iphoneos/GlassTerm.app" "build/Payload/GlassTerm.app"
+          ditto "build/ipa/Build/Products/Release-iphoneos/GlazeVerre.app" "build/Payload/GlazeVerre.app"
           cd build
-          zip -qry "GlassTerm-${GITHUB_SHA::7}-unsigned.ipa" Payload
+          zip -qry "GlazeVerre-${GITHUB_SHA::7}-unsigned.ipa" Payload
           cd ..
           ls -lh build/*.ipa
 
       - name: Upload ipa artifact
         uses: actions/upload-artifact@v4
         with:
-          name: GlassTerm-unsigned-ipa
+          name: GlazeVerre-unsigned-ipa
           path: build/*.ipa
           retention-days: 14

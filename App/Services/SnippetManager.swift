@@ -7,7 +7,7 @@ import Persistence
 @MainActor
 @Observable
 final class SnippetManager {
-    private static let logger = Logger(subsystem: "com.glazeterm.GlassTerm", category: "snippets")
+    private static let logger = Logger(subsystem: "com.glazeverre.GlazeVerre", category: "snippets")
 
     private let store: SnippetStore
     private(set) var snippets: [SnippetRecord] = []

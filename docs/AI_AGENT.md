@@ -1,4 +1,4 @@
-# GlassTerm AI Agent 设计
+# GlazeVerre AI Agent 设计
 
 > 与代码同步演进。安全边界最严格的模块（规范 §4.5 / §4.6）；参照 MaidKit
 > `ssh_agent_service.dart` / `agent_run_policy.dart` 的「提案-审批-执行」边界。

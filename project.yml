@@ -1,6 +1,6 @@
-name: GlassTerm
+name: GlazeVerre
 options:
-  bundleIdPrefix: com.glazeterm
+  bundleIdPrefix: com.glazeverre
   deploymentTarget:
     iOS: "26.0"
   developmentLanguage: en
@@ -21,7 +21,7 @@ packages:
   Persistence:
     path: Packages/Persistence
 targets:
-  GlassTerm:
+  GlazeVerre:
     type: application
     platform: iOS
     sources:
@@ -38,7 +38,7 @@ targets:
     info:
       path: App/Info.plist
       properties:
-        CFBundleDisplayName: GlassTerm
+        CFBundleDisplayName: GlazeVerre
         CFBundleDevelopmentRegion: en
         CFBundleLocalizations:
           - en
@@ -48,38 +48,38 @@ targets:
           - UIInterfaceOrientationPortrait
         UIRequiresFullScreen: true
         ITSAppUsesNonExemptEncryption: false
-  GlassTermTests:
+  GlazeVerreTests:
     type: bundle.unit-test
     platform: iOS
     sources:
-      - Tests/GlassTermTests
+      - Tests/GlazeVerreTests
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
     dependencies:
-      - target: GlassTerm
-  GlassTermUITests:
+      - target: GlazeVerre
+  GlazeVerreUITests:
     type: bundle.ui-testing
     platform: iOS
     sources:
-      - Tests/GlassTermUITests
+      - Tests/GlazeVerreUITests
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
     dependencies:
-      - target: GlassTerm
+      - target: GlazeVerre
 schemes:
-  GlassTerm:
+  GlazeVerre:
     build:
       targets:
-        GlassTerm: all
-        GlassTermTests: [test]
-        GlassTermUITests: [test]
+        GlazeVerre: all
+        GlazeVerreTests: [test]
+        GlazeVerreUITests: [test]
     run:
       config: Debug
     test:
       config: Debug
       gatherCoverageData: true
       targets:
-        - GlassTermTests
-        - GlassTermUITests
+        - GlazeVerreTests
+        - GlazeVerreUITests

@@ -11,7 +11,7 @@
 - App 层：`AgentRunner`（真实 provider + 真实 SSH host 接 AgentLoop）、`AgentView`（审批卡 + 编辑后批准 + kill switch 悬浮按钮 + 回声环形缓冲 + 审计入口）、`AuditManager` + `AuditView`（SwiftData 落盘、导出/清空）
 - 审计：`AuditRecord`（SwiftData）+ `AuditLoggingBridge`（Sendable actor 接 AgentLoop → SwiftData）
 
-**验收结果**（run [33584748396](https://github.com/sanguine886/GlassTerm/actions/runs/33584748396)）
+**验收结果**（run [33584748396](https://github.com/sanguine886/GlazeVerre/actions/runs/33584748396)）
 
 - [x] lint 全绿（swiftformat + swiftlint）
 - [x] AIAgent 单测通过，覆盖率 71.9%（≥60% 硬门槛，ADR-0005）
@@ -68,7 +68,7 @@
 - 单测 6 文件共 49 用例：连接/重连/TOFU 三态/指纹（ed25519 + P256/P384/P521 与 `ssh-keygen -lf` 逐一对账）/ 密钥解析（ed25519 明密文、RSA OpenSSH）/ shell 信号原语
 - 新增 ADR-0008（反射指纹提取 + Guard 测试钉死内部布局）、ADR-0009（exec 通道 keepalive）
 
-**验收结果**（PR #4，CI run [33373451822](https://github.com/sanguine886/GlassTerm/actions/runs/33373451822) 全绿）
+**验收结果**（PR #4，CI run [33373451822](https://github.com/sanguine886/GlazeVerre/actions/runs/33373451822) 全绿）
 
 - [x] lint 全绿：swiftformat + swiftlint 零违规
 - [x] CoreSSH `swift test` 49/49 通过；行覆盖率 **62.1%** ≥ 60%（ADR-0005）
@@ -102,7 +102,7 @@
 - 单测 4 项（间距刻度、审批卡数据模型）+ UI 冒烟 1 项（四 Tab 切换）
 - docs 四件套：ARCHITECTURE 成稿（含 ADR-0001…0007）、SECURITY / AI_AGENT / TERMINAL 初稿
 
-**验收结果**（PR #1，CI run [33317598194](https://github.com/sanguine886/GlassTerm/actions/runs/33317598194)）
+**验收结果**（PR #1，CI run [33317598194](https://github.com/sanguine886/GlazeVerre/actions/runs/33317598194)）
 
 - [x] lint 全绿：swiftformat --lint 通过，swiftlint 零警告
 - [x] iPhone 16 Pro（iOS 26）模拟器安装运行；UI 冒烟通过（22.5s）

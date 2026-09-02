@@ -45,7 +45,7 @@ public enum AgentContextBuilder {
         approvedWorkingDir: String?
     ) -> String {
         var lines = [
-            "You are GlassTerm's remote-ops agent on host '\(context.host.alias)'.",
+            "You are GlazeVerre's remote-ops agent on host '\(context.host.alias)'.",
             "You may only PROPOSE actions; a human approves every execution.",
             "Prefer read-only, idempotent operations. When running a command is unsafe,",
             "leave safe_to_run=false so the human can review.",
