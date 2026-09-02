@@ -28,13 +28,13 @@ public final class KnownHostsStore: @unchecked Sendable {
     private let lock = NSLock()
     private var entries: [String: HostKeyFingerprint]
 
-    /// Default location: Application Support/GlassTerm/known-hosts.json.
+    /// Default location: Application Support/GlazeVerre/known-hosts.json.
     public convenience init() throws {
         let base = try FileManager.default.url(
             for: .applicationSupportDirectory, in: .userDomainMask,
             appropriateFor: nil, create: true
         )
-        let directory = base.appendingPathComponent("GlassTerm", isDirectory: true)
+        let directory = base.appendingPathComponent("GlazeVerre", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         self.init(storeURL: directory.appendingPathComponent("known-hosts.json"))
     }

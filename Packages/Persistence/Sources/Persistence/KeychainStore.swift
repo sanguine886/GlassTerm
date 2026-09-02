@@ -19,7 +19,7 @@ public enum SecretStoreError: Error, Equatable {
 public final class KeychainStore: SecretStoring, @unchecked Sendable {
     private let service: String
 
-    public init(service: String = "com.glazeterm.GlassTerm.secrets") {
+    public init(service: String = "com.glazeverre.GlazeVerre.secrets") {
         self.service = service
     }
 

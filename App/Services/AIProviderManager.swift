@@ -11,7 +11,7 @@ import Persistence
 @MainActor
 @Observable
 final class AIProviderManager {
-    private static let logger = Logger(subsystem: "com.glazeterm.GlassTerm", category: "ai-providers")
+    private static let logger = Logger(subsystem: "com.glazeverre.GlazeVerre", category: "ai-providers")
 
     private let providerStore: AIProviderStore
     private let secrets: SecretStoring

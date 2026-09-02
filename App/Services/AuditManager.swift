@@ -9,7 +9,7 @@ import Persistence
 @MainActor
 @Observable
 final class AuditManager {
-    private static let logger = Logger(subsystem: "com.glazeterm.GlassTerm", category: "audit")
+    private static let logger = Logger(subsystem: "com.glazeverre.GlazeVerre", category: "audit")
 
     private let auditStore: AuditStore
     private(set) var entries: [AuditRecord] = []

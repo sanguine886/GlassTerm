@@ -4,7 +4,7 @@ import SwiftData
 import SwiftUI
 
 @main
-struct GlassTermApp: App {
+struct GlazeVerreApp: App {
     private let container: ModelContainer
     private let hostManager: HostManager
     private let snippetManager: SnippetManager
