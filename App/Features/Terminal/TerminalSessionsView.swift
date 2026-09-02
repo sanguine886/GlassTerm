@@ -49,7 +49,7 @@ struct TerminalSessionsView: View {
                     SnippetsListView()
                 }
             }
-            .task { manager.refresh() }
+            .task { /* hosts are observable via HostManager.allHosts */ }
         }
     }
 

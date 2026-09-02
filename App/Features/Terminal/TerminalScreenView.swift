@@ -239,16 +239,14 @@ private struct TerminalViewWrapper: UIViewRepresentable {
             terminal.trailingAnchor.constraint(equalTo: wrapper.trailingAnchor),
             terminal.bottomAnchor.constraint(equalTo: wrapper.bottomAnchor),
         ])
-        // Let the emulator reflow to the actual width once laid out.
-        terminal.recalculateSize()
+        // Let Auto Layout drive the column width (SwiftTerm lays out on
+        // layoutSubviews; the pinned constraints reflow it to the phone width).
         return wrapper
     }
 
     func updateUIView(_ container: UIView, context _: Context) {
-        if let terminal = container.subviews.first as? TerminalView {
-            terminal.recalculateSize()
-        }
+        // No manual resize: Auto Layout handles width changes. UIKit triggers
+        // layoutSubviews on resize, which recalculates the terminal's columns.
+        _ = container
     }
-
-    func updateUIView(_: TerminalView, context _: Context) {}
 }
