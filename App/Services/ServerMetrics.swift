@@ -113,10 +113,13 @@ struct ServerMetricSampler {
     }
 
     /// From `/proc/net/dev` extracts the `eth`/`en` interface rx/tx byte totals.
+    /// Defensively bounds-checked: a device line must carry at least 10
+    /// whitespace tokens (index 9 = tx; shorter lines are skipped, never crash).
     static func ethBytes(in text: String) -> (rx: UInt64, tx: UInt64) {
         for line in text.split(separator: "\n") where line.contains(":") {
             let cleaned = line.split(whereSeparator: \.isWhitespace)
-            guard cleaned.count > 4 else { continue }
+            // [0]=iface, [1]=rxBytes, …, [9]=txBytes. Require the full column.
+            guard cleaned.count > 9 else { continue }
             let rx = UInt64(cleaned[1].trimmingCharacters(in: .init(charactersIn: ":"))) ?? 0
             let tx = UInt64(cleaned[9]) ?? 0
             return (rx, tx)

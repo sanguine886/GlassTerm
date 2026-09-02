@@ -225,29 +225,60 @@ private struct TerminalViewWrapper: UIViewRepresentable {
     let session: TerminalSession
 
     func makeUIView(context _: Context) -> UIView {
-        // Wrap the SwiftTerm view in a container that fills the phone width.
-        // SwiftTerm computes the column count from the view width; pinning the
-        // wrapper to the SwiftUI container makes the emulator fit the screen
-        // instead of overflowing it (真机验收: 终端宽度>屏幕).
-        let wrapper = UIView()
-        wrapper.backgroundColor = .black
-        let terminal = session.terminalView
-        terminal.translatesAutoresizingMaskIntoConstraints = false
-        wrapper.addSubview(terminal)
-        NSLayoutConstraint.activate([
-            terminal.topAnchor.constraint(equalTo: wrapper.topAnchor),
-            terminal.leadingAnchor.constraint(equalTo: wrapper.leadingAnchor),
-            terminal.trailingAnchor.constraint(equalTo: wrapper.trailingAnchor),
-            terminal.bottomAnchor.constraint(equalTo: wrapper.bottomAnchor),
-        ])
-        // Let Auto Layout drive the column width (SwiftTerm lays out on
-        // layoutSubviews; the pinned constraints reflow it to the phone width).
-        return wrapper
+        // A host view that fills the phone and, on every layout, resizes the
+        // SwiftTerm terminal to the actual column/row count for its bounds.
+        // This is what keeps the CLI from overflowing the screen (真机验收:
+        // 终端宽度>屏幕). Auto Layout alone does not resize the emulator.
+        let host = TerminalHostView()
+        host.backgroundColor = .black
+        host.attach(session.terminalView)
+        return host
     }
 
     func updateUIView(_ container: UIView, context _: Context) {
-        // No manual resize: Auto Layout handles width changes. UIKit triggers
-        // layoutSubviews on resize, which recalculates the terminal's columns.
-        _ = container
+        guard let host = container as? TerminalHostView else { return }
+        host.attach(session.terminalView)
+        host.setNeedsLayout()
+    }
+}
+
+/// Host UIView that owns a SwiftTerm terminal and re-sizes it to fit its own
+/// bounds. `layoutSubviews` runs on every size change (rotation, split, launch),
+/// so the terminal always matches the phone's width.
+private final class TerminalHostView: UIView {
+    private var terminalView: TerminalView?
+
+    func attach(_ terminal: TerminalView) {
+        if terminalView === terminal {
+            return
+        }
+        terminalView?.removeFromSuperview()
+        terminal.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(terminal)
+        NSLayoutConstraint.activate([
+            terminal.topAnchor.constraint(equalTo: topAnchor),
+            terminal.leadingAnchor.constraint(equalTo: leadingAnchor),
+            terminal.trailingAnchor.constraint(equalTo: trailingAnchor),
+            terminal.bottomAnchor.constraint(equalTo: bottomAnchor),
+        ])
+        terminalView = terminal
+        setNeedsLayout()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        guard let terminal = terminalView else { return }
+        let width = bounds.width
+        let height = bounds.height
+        guard width > 0, height > 0 else { return }
+
+        // Compute how many fixed-width cells fit the host.
+        let cellWidth = terminal.cellSize.width
+        let cellHeight = terminal.cellSize.height
+        let cols = max(Int(width / cellWidth), 1)
+        let rows = max(Int(height / cellHeight), 1)
+        if let terminalState = terminal.terminal, terminalState.cols != cols || terminalState.rows != rows {
+            terminalState.resize(cols: cols, rows: rows, pixelWidth: Int(width), pixelHeight: Int(height))
+        }
     }
 }
