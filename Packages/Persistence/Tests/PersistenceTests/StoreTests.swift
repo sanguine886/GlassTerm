@@ -87,6 +87,137 @@ final class SnippetStoreTests: XCTestCase {
     }
 }
 
+final class AIProviderStoreTests: XCTestCase {
+    func testCRUDRoundtripInMemory() throws {
+        let container = try AIProviderStore.makeContainer(inMemory: true)
+        let store = AIProviderStore(container: container)
+        let provider = AIProviderRecord(
+            name: "Claude",
+            kindRaw: "anthropic",
+            baseURL: "https://api.anthropic.com",
+            model: "claude-sonnet-4-5",
+            temperature: 0.3,
+            apiKeyRef: "ref-openai",
+            isDefault: true
+        )
+        try store.add(provider)
+
+        let fetched = try store.record(id: provider.id)
+        XCTAssertEqual(fetched?.name, "Claude")
+        XCTAssertEqual(fetched?.kindRaw, "anthropic")
+        XCTAssertEqual(fetched?.model, "claude-sonnet-4-5")
+        XCTAssertEqual(fetched?.temperature, 0.3)
+        XCTAssertEqual(fetched?.isDefault, true)
+
+        provider.name = "GPT"
+        try store.update(provider)
+        XCTAssertEqual(try store.record(id: provider.id)?.name, "GPT")
+
+        try store.delete(id: provider.id)
+        XCTAssertNil(try store.record(id: provider.id))
+    }
+
+    func testSetDefaultOnlyMarksOneActive() throws {
+        let container = try AIProviderStore.makeContainer(inMemory: true)
+        let store = AIProviderStore(container: container)
+        let a = AIProviderRecord(name: "A", kindRaw: "openAICompatible", baseURL: "https://a", model: "m", apiKeyRef: "ra")
+        let b = AIProviderRecord(name: "B", kindRaw: "anthropic", baseURL: "https://b", model: "m", apiKeyRef: "rb")
+        try store.add(a)
+        try store.add(b)
+
+        try store.setDefault(id: b.id)
+        let all = try store.all()
+        XCTAssertTrue(all.first(where: { $0.id == a.id })?.isDefault == false)
+        XCTAssertTrue(all.first(where: { $0.id == b.id })?.isDefault == true)
+    }
+
+    func testAllSortedByCreation() throws {
+        let container = try AIProviderStore.makeContainer(inMemory: true)
+        let store = AIProviderStore(container: container)
+        let older = AIProviderRecord(name: "old", kindRaw: "openAICompatible", baseURL: "https://o", model: "m", apiKeyRef: "ro", createdAt: Date(timeIntervalSinceNow: -100))
+        let newer = AIProviderRecord(name: "new", kindRaw: "gemini", baseURL: "https://n", model: "m", apiKeyRef: "rn")
+        try store.add(newer)
+        try store.add(older)
+
+        XCTAssertEqual(try store.all().map(\.name), ["old", "new"])
+    }
+}
+
+final class ChatSessionStoreTests: XCTestCase {
+    func testCRUDRoundtripInMemory() throws {
+        let container = try ChatSessionStore.makeContainer(inMemory: true)
+        let store = ChatSessionStore(container: container)
+        let session = ChatSessionRecord(
+            title: "Disk clean",
+            providerID: UUID(),
+            messagesJSON: Data(#"[{"role":"user","text":"hi"}]"#.utf8)
+        )
+        try store.add(session)
+
+        let fetched = try store.record(id: session.id)
+        XCTAssertEqual(fetched?.title, "Disk clean")
+        XCTAssertEqual(fetched?.messagesJSON, Data(#"[{"role":"user","text":"hi"}]"#.utf8))
+
+        session.title = "Renamed"
+        session.messagesJSON = Data(#"[{"role":"user","text":"hey"}]"#.utf8)
+        try store.update(session)
+        XCTAssertEqual(try store.record(id: session.id)?.title, "Renamed")
+
+        try store.delete(id: session.id)
+        XCTAssertNil(try store.record(id: session.id))
+    }
+
+    func testAllSortedByUpdatedDescending() throws {
+        let container = try ChatSessionStore.makeContainer(inMemory: true)
+        let store = ChatSessionStore(container: container)
+        let older = ChatSessionRecord(title: "old", updatedAt: Date(timeIntervalSinceNow: -100))
+        let newer = ChatSessionRecord(title: "new", updatedAt: Date())
+        try store.add(older)
+        try store.add(newer)
+
+        XCTAssertEqual(try store.all().map(\.title), ["new", "old"])
+    }
+}
+
+final class AuditStoreTests: XCTestCase {
+    func testAddAndAll() throws {
+        let container = try AuditStore.makeContainer(inMemory: true)
+        let store = AuditStore(container: container)
+        let entry = AuditRecord(
+            timestamp: Date(),
+            toolName: "run_command",
+            commandText: "rm -rf /tmp",
+            resultSummary: "ok",
+            approver: "user",
+            strategyRaw: "alwaysAsk",
+            outcomeRaw: "userApproved"
+        )
+        try store.add(entry)
+        XCTAssertEqual(try store.all().count, 1)
+        XCTAssertEqual(try store.all().first?.commandText, "rm -rf /tmp")
+        XCTAssertEqual(try store.all().first?.outcomeRaw, "userApproved")
+    }
+
+    func testClearEmptiesAll() throws {
+        let container = try AuditStore.makeContainer(inMemory: true)
+        let store = AuditStore(container: container)
+        try store.add(AuditRecord(timestamp: Date(), toolName: "read_file", commandText: "cat x", resultSummary: "-", approver: "auto", strategyRaw: "readOnly", outcomeRaw: "autoApproved"))
+        try store.clear()
+        XCTAssertTrue(try store.all().isEmpty)
+    }
+
+    func testAllSortedByTimestampDescending() throws {
+        let container = try AuditStore.makeContainer(inMemory: true)
+        let store = AuditStore(container: container)
+        let older = AuditRecord(timestamp: Date(timeIntervalSinceNow: -100), toolName: "t", commandText: "a", resultSummary: "-", approver: "u", strategyRaw: "alwaysAsk", outcomeRaw: "rejected")
+        let newer = AuditRecord(timestamp: Date(), toolName: "t", commandText: "b", resultSummary: "-", approver: "u", strategyRaw: "alwaysAsk", outcomeRaw: "rejected")
+        try store.add(older)
+        try store.add(newer)
+
+        XCTAssertEqual(try store.all().map(\.commandText), ["b", "a"])
+    }
+}
+
 final class KeychainStoreTests: XCTestCase {
     private var store: KeychainStore!
 
