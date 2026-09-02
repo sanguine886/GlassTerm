@@ -1,32 +1,14 @@
 import GlassKit
 import SwiftUI
 
+/// Terminal tab: hosts the snippet command panel (spec §4.3). Active terminal
+/// sessions live in TerminalScreenView reached from each server.
 struct TerminalSessionsView: View {
     var body: some View {
         NavigationStack {
-            content
-                .navigationTitle(Text("tab.terminal"))
+            SnippetsListView()
                 .background(Color.glassBackground.ignoresSafeArea())
-        }
-    }
-
-    private var content: some View {
-        GlassEffectContainer(spacing: GlassSpacing.md) {
-            ScrollView {
-                VStack(spacing: GlassSpacing.md) {
-                    PlaceholderSection(
-                        headingID: "screen.terminal.heading",
-                        titleKey: "placeholder.terminal.title",
-                        bodyKey: "placeholder.terminal.body"
-                    )
-                    GlassCard {
-                        Text("placeholder.terminal.hint")
-                            .font(.footnote)
-                            .foregroundStyle(Color.glassSecondaryText)
-                    }
-                }
-                .padding(GlassSpacing.lg)
-            }
+                .accessibilityIdentifier("screen.terminal.heading")
         }
     }
 }

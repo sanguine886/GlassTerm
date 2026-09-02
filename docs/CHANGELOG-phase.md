@@ -2,6 +2,93 @@
 
 > 每阶段结束追加：交付物清单、验收结果、遗留风险（规范 §6.6.3）。
 
+## P5 — AI 接管 Agent（2026-09-02）
+
+**交付物**
+
+- `AIAgent` 引擎（ADR-0002）：危险命令分类器（64 条规则，first-match）、`ApprovalDecider` 三策略（alwaysAsk / autoReview / readOnly）、`AgentLoop`（@MainActor，proposal → 审批 → 执行 → tool-result 续接，kill switch，审计）、`AgentToolRegistry`（7 内置工具 + JSON Schema）、`AgentCancellationToken`、`InMemoryAuditLog`
+- 安全验证：`AgentLoopTests` 覆盖编辑后重新分类、拒绝续用、危险命令被所有策略拦截、kill switch 生效；分类器词表 ≥40
+- App 层：`AgentRunner`（真实 provider + 真实 SSH host 接 AgentLoop）、`AgentView`（审批卡 + 编辑后批准 + kill switch 悬浮按钮 + 回声环形缓冲 + 审计入口）、`AuditManager` + `AuditView`（SwiftData 落盘、导出/清空）
+- 审计：`AuditRecord`（SwiftData）+ `AuditLoggingBridge`（Sendable actor 接 AgentLoop → SwiftData）
+
+**验收结果**（run [33584748396](https://github.com/sanguine886/GlassTerm/actions/runs/33584748396)）
+
+- [x] lint 全绿（swiftformat + swiftlint）
+- [x] AIAgent 单测通过，覆盖率 71.9%（≥60% 硬门槛，ADR-0005）
+- [x] 模拟器 Build & Test + UI 冒烟 + 深度 IPA 全绿
+- [x] 审批卡、kill switch、审计 UI、Agent/终端双视图回显均已接入 App
+
+**遗留风险 / 待办**
+
+- Agent 与终端双视图的"真机回显联动"（把执行 echo 渲染进真实终端环形缓冲）待真机验收
+- 审计日志 AES-GCM 加密落盘（规范 §6.3.3）尚未接入，当前为明文 SwiftData（密钥派生自生物识别门禁属 P6）
+
+## P4 — 自定义 AI 接入（2026-09-01）
+
+**交付物**
+
+- `AIAgent` 适配器三套（OpenAI 兼容 / Anthropic / Gemini）：流式 SSE 解析、工具调用累积、幂等断流重试（zero-delta only）、`systemPrompt` 顶层化
+- 模型发现：OpenAI 兼容 `/v1/models`（`ModelDiscovering`）；Anthropic/Gemini 无公开目录返回 unsupported
+- App 层：`AIProviderManager`（SwiftData 配置 + Keychain 存 key + 切换默认 + 连接测试 + 模型发现）、`ProvidersSettingsSection` / `AIProviderEditView`（协议/BaseURL/模型/温度/API Key 表单）、`AssistantView` 对话（流式 + Markdown + 代码块 + 「预览将发送内容」）、`ChatManager` + `ChatSessionStore`（多会话 SwiftData 持久化、删除/重命名）
+- 统一容器 `AppModelContainer`（Host / Snippet / AIProvider / ChatSession / Audit 五模型单容器）
+
+**验收结果**（同 P5 的 run 33584748396）
+
+- [x] 三协议 adapter 单测通过；AIAgent 覆盖率全绿
+- [x] 提供商配置 UI、对话 UI、会话持久化编译/冒烟通过
+- [x] API Key 仅存 Keychain（代码审计确认，不入 SwiftData/日志）
+
+**遗留风险 / 待办**
+
+- Gemini 模型发现（无稳定公开目录）：暂不支持，UI 已优雅降级提示
+
+## P3 — SFTP 与运维工具（2026-09-02）
+
+**交付物**
+
+- SFTP 浏览器（`SFTPBrowserView`）完整：单列表 + 面包屑、上传（Files 选择器）、下载（分享 sheet）、删除/重命名/新建文件夹/内置文本编辑器（≤1MB 读写写回）；权限字符串展示（`permissionString` 转 rwx）
+- 命令片段库（`SnippetsListView`）：创建/删除/选择主机执行/输出查看（整块返回）
+
+**验收结果**（同 P5 的 run 33584748396）
+
+- [x] SFTP 权限显示、移动（rename 跨目录）编译/冒烟通过
+
+**遗留风险 / 待办（二期 backlog）**
+
+- **端口转发（L/R）+ 跳板机：定为二期更新需求，本期不做。** Citadel 0.12.1 已确认具备 `createDirectTCPIPChannel`（L）与 `withRemotePortForward`（R）API，方向可行；但需要深度 NIO 双向 pipe（事件循环 / 生命周期 / close 传播），运行时正确性只能真机验证，故延后专项交付。
+- 片段库流式输出（当前整块返回）：需 CoreSSH exec 流式 API，二期一并做。
+
+## P1 — SSH 引擎与主机管理（2026-08-31）
+
+**交付物**
+
+- `CoreSSH` 引擎（8 个源文件）：actor 会话 `SSHSession`（连接/exec/PTY/keepalive/指数退避重连，状态流广播）、Citadel 传输层（密码/密钥认证、`xterm-256color` shell、exec）、TOFU known-hosts（首次指纹确认、密钥变更阻断 + 重 pin）、`ReconnectPolicy`、`HostKeyFingerprint`（RFC 4253 wire 格式 + SEC1 未压缩点）、`SSHHostConfig`、`SSHError`（LocalizedError）
+- `Persistence`：`HostRecord`（SwiftData 模型，秘密仅存 Keychain 引用 `secretRef`）、`HostStore`、`KeychainStore`（`ThisDeviceOnly`，replace-or-add 语义）
+- App 层：主机列表（Glass 卡片）/ 新增编辑表单 / 指纹确认页（`.new` 与 `.changed` 警示双形态）/ exec 调试页；`HostManager` 编排（CRUD + 运行时从 Keychain 即时取密）
+- 单测 6 文件共 49 用例：连接/重连/TOFU 三态/指纹（ed25519 + P256/P384/P521 与 `ssh-keygen -lf` 逐一对账）/ 密钥解析（ed25519 明密文、RSA OpenSSH）/ shell 信号原语
+- 新增 ADR-0008（反射指纹提取 + Guard 测试钉死内部布局）、ADR-0009（exec 通道 keepalive）
+
+**验收结果**（PR #4，CI run [33373451822](https://github.com/sanguine886/GlassTerm/actions/runs/33373451822) 全绿）
+
+- [x] lint 全绿：swiftformat + swiftlint 零违规
+- [x] CoreSSH `swift test` 49/49 通过；行覆盖率 **62.1%** ≥ 60%（ADR-0005）
+- [x] Persistence 行覆盖率 **96.0%**（121/126）≥ 60%（SPM 包编译进 App 二进制，按 `Packages/Persistence/` 源路径过滤统计）
+- [x] 模拟器 Build & Test：App 单测 15 + UI 冒烟 1 全过；Unsigned IPA 设备构建成功
+- [ ] 真机：真实 Linux 主机（密码与密钥两种认证）连接稳定 30 分钟 —— **待测**
+- [ ] 真机：主机密钥变更阻断 + 告警走查 —— **待测**
+
+**CI 修复过程中发现并修复的真实缺陷**
+
+- ECDSA 指纹：`rawRepresentation` 是 64 字节裸 `X||Y`，而 `ssh-keygen` 哈希 65 字节未压缩点（`0x04||X||Y`）；改用 `x963Representation` 后 P256/P384/P521 指纹与 `ssh-keygen -lf` 完全一致
+- RSA 私钥认证死分支：`BEGIN OPENSSH PRIVATE KEY` 是 ed25519/RSA 共用容器，原判定把所有 RSA 私钥送进 Curve25519 解析必然失败；改为按算法标记 + OpenSSH 容器内先探测 ed25519（保护密文密钥）再降级 RSA
+
+**遗留风险 / 待办**
+
+- PKCS#1 格式 RSA 私钥不被 Citadel 解析（`keyParseFailed`）；OpenSSH 格式可用，PKCS#1 转换层记 backlog
+- 真机自测清单待完成：弱网重连、后台切换、Face ID 门禁（P6）、深浅色截图归档 `docs/screenshots/p1/`
+- `UIRequiresFullScreen` 自 iOS 26 弃用（P6 移除）
+- 覆盖率先行约定：CoreSSH 用 `swift test` + llvm-cov（profdata），Persistence 用 xcodebuild xcresult + 源路径过滤；两处口径不同，P2 若出现口径分歧再统一
+
 ## P0 — 脚手架与设计系统（2026-08-30）
 
 **交付物**
