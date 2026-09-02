@@ -95,8 +95,6 @@ struct ProvidersSettingsSection: View {
     }
 }
 
-extension AIProviderRecord: Identifiable {} // already has id: UUID
-
 /// Edit / create form for an AI provider (spec §4.5).
 struct AIProviderEditView: View {
     @Environment(AIProviderManager.self) private var manager

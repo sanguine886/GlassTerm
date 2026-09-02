@@ -86,14 +86,14 @@ final class AgentRunner {
         // Bridge the loop's audit records into SwiftData when the view bound a
         // store-based sink; otherwise keep an in-memory trail.
         let auditLogger = auditSink ?? InMemoryAuditLog()
-        let config = AgentLoopConfiguration(model: provider.model, strategy: strategy)
+        let loopConfig = AgentLoopConfiguration(model: provider.model, strategy: strategy)
         let loop = AgentLoop(
             provider: adapter,
             host: SSHSessionCommandAdapter(session: session),
             registry: registry,
             decider: decider,
             auditLog: auditLogger,
-            configuration: config
+            configuration: loopConfig
         )
         self.loop = loop
         isRunning = true

@@ -77,9 +77,7 @@ final class AIProviderManager {
 
     func delete(_ provider: AIProviderRecord) {
         // Best-effort key scrubbing from the Keychain on delete.
-        if let ref = provider.apiKeyRef {
-            try? secrets.delete(account: ref)
-        }
+        try? secrets.delete(account: provider.apiKeyRef)
         try? providerStore.delete(id: provider.id)
         refresh()
     }
