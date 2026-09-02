@@ -98,7 +98,6 @@ final class ChatManager {
             return await send(prompt, provider: provider, hostContext: hostContext)
         }
 
-        turns.append(ChatTurn(role: .user, body: .text(prompt)))
         isStreaming = true
         lastError = nil
 
@@ -113,7 +112,7 @@ final class ChatManager {
         var messages: [ChatMessage] = [
             ChatMessage(role: .system, content: systemPrompt(hostContext: hostContext)),
         ]
-        for turn in turns.dropLast() {
+        for turn in turns {
             messages.append(ChatMessage(role: turn.role, content: Self.text(of: turn.body)))
         }
         if !prompt.isEmpty {
@@ -127,26 +126,37 @@ final class ChatManager {
             stream: true
         )
 
+        // Accumulate this turn's stream locally so switching sessions mid-stream
+        // never writes a different session's transcript (spec §4.5 multi-session).
         var assistantText = ""
+        var toolCalls: [String] = []
+        // Append to self.turns only after the stream resolves, and only if the
+        // user is still on the originating session.
+        let originSessionID = sessionID
         do {
             let stream = try await adapter.streamCompletion(request)
             for try await event in stream {
                 switch event {
                 case let .content(text):
                     assistantText += text
-                    if var last = turns.last {
-                        last = ChatTurn(role: .assistant, body: .text(assistantText))
-                        turns[turns.count - 1] = last
-                    } else {
-                        turns.append(ChatTurn(role: .assistant, body: .text(assistantText)))
-                    }
                 case let .toolCall(delta), let .toolCallComplete(delta):
-                    turns.append(ChatTurn(role: .assistant, body: .toolCall(delta.argumentsJSON)))
+                    toolCalls.append(delta.argumentsJSON)
                 case .usage, .done:
                     break
                 }
             }
-            persist(sessionID: sessionID)
+            // The turns that belong to this send (for persistence).
+            var turnSnapshot: [ChatTurn] = [ChatTurn(role: .user, body: .text(prompt))]
+            for call in toolCalls {
+                turnSnapshot.append(ChatTurn(role: .assistant, body: .toolCall(call)))
+            }
+            if !assistantText.isEmpty {
+                turnSnapshot.append(ChatTurn(role: .assistant, body: .text(assistantText)))
+            }
+            if activeSessionID == originSessionID {
+                turns.append(contentsOf: turnSnapshot)
+            }
+            persist(sessionID: originSessionID, appending: turnSnapshot)
             isStreaming = false
             return true
         } catch {
@@ -172,10 +182,14 @@ final class ChatManager {
 
     // MARK: - Persistence
 
-    private func persist(sessionID: UUID) {
+    /// Appends a completed turn (the assets from `send`) to the session's stored
+    /// transcript. Uses the passed snapshot so persisting never picks up a
+    /// different session's in-memory `turns` mid-switch (spec §4.5 multi-session).
+    private func persist(sessionID: UUID, appending newTurns: [ChatTurn]) {
         guard let record = (try? chatStore.record(id: sessionID)) ?? nil else { return }
-        let stored = turns.map { StoredMessage(role: $0.role, text: Self.text(of: $0.body)) }
-        record.messagesJSON = (try? JSONEncoder().encode(stored)) ?? Data()
+        let existing = (try? JSONDecoder().decode([StoredMessage].self, from: record.messagesJSON)) ?? []
+        let appended = existing + newTurns.map { StoredMessage(role: $0.role, text: Self.text(of: $0.body)) }
+        record.messagesJSON = (try? JSONEncoder().encode(appended)) ?? Data()
         record.updatedAt = Date()
         try? chatStore.update(record)
         refresh()

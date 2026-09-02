@@ -76,10 +76,15 @@ final class AgentRunner {
         }
         let adapter = AIProviderAdapterFactory.make(kind: provider.kind, config: provider, apiKey: apiKey)
 
-        // Wire the registry with real executors (SSH-backed) for the built-ins.
-        var registry = AgentToolRegistry(definitions: AgentToolRegistry.defaultToolDefinitions)
-        if let runCommand = AgentToolRegistry.defaultToolDefinitions.first(where: { $0.name == "run_command" }) {
-            registry.register(runCommand, executor: SSHCommandExecutor(session: session))
+        // Wire the registry with real executors (SSH-backed) for the tools the model
+        // may actually propose. Tools without an executor are not broadcast, so the
+        // model never proposes something that would end in unknownToolCall.
+        var registry = AgentToolRegistry(definitions: [])
+        let sshExecutor = SSHCommandExecutor(session: session)
+        for definition in AgentToolRegistry.defaultToolDefinitions
+            where !Self.isAppManagedTool(definition.name)
+        {
+            registry.register(definition, executor: sshExecutor)
         }
 
         let decider = ApprovalDecider()
@@ -117,7 +122,10 @@ final class AgentRunner {
     /// Runs the next model turn after the user decided on a proposal.
     func proceed(approve: Bool, editedCommand: String?) async -> String? {
         guard let loop, let proposal = pendingProposal else { return nil }
-        defer { pendingProposal = nil }
+        // Consume the pending proposal BEFORE running the loop so a re-proposal
+        // returned by an edit re-approval (dangerous edit) can be reassigned by
+        // surface() instead of being cleared by a late defer.
+        pendingProposal = nil
         do {
             let turn: AgentTurn = if approve {
                 try await loop.continueAfterApproval(proposal: proposal, editedCommand: editedCommand)
@@ -133,9 +141,13 @@ final class AgentRunner {
         }
     }
 
-    /// Kill switch: aborts in-flight work (spec §4.6).
+    /// Kill switch: aborts in-flight work (spec §4.6). Disconnects the host so any
+    /// running exec channel is aborted; the session's reconnect policy restores
+    /// it before the next run.
     func kill() async {
         await loop?.cancel()
+        await host?.disconnect()
+        host = nil
         isRunning = false
         phaseLabel = "agent.idle"
     }
@@ -151,14 +163,38 @@ final class AgentRunner {
             isRunning = false
         }
     }
+
+    /// Tools that are App-internal and get no broadcast executor.
+    private static func isAppManagedTool(_ name: String) -> Bool {
+        switch name {
+        case "create_snippet", "run_snippet":
+            true
+        default:
+            false
+        }
+    }
 }
 
 /// A real executor that runs commands over the SSH session.
 private struct SSHCommandExecutor: AgentToolExecutor, Sendable {
     let session: SSHSession
 
-    func execute(_ invocation: AgentToolInvocation, cancelToken _: AgentCancellationToken?) async throws -> ToolResult {
+    func execute(_ invocation: AgentToolInvocation, cancelToken: AgentCancellationToken?) async throws -> ToolResult {
         let command = invocation.arguments["command"]?.stringValue ?? ""
+        // Kill switch must actually abort the in-flight exec. SSHSession exposes
+        // no per-exec cancel, so we disconnect the transport (which aborts the
+        // exec channel); the reconnect policy restores it before the next turn.
+        var handlerID: UUID?
+        if let cancelToken {
+            handlerID = await cancelToken.register { [session] in
+                await session.disconnect()
+            }
+        }
+        defer {
+            if let handlerID, let cancelToken {
+                Task { await cancelToken.unregister(handlerID) }
+            }
+        }
         do {
             let result = try await session.run(command)
             return ToolResult(toolCallID: invocation.toolCallID, text: result.output, status: .success, truncated: false)
