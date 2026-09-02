@@ -43,6 +43,7 @@ struct AssistantView: View {
             .navigationTitle(Text("tab.assistant"))
             .navigationBarTitleDisplayMode(.inline)
             .background(Color.glassBackground.ignoresSafeArea())
+            .accessibilityIdentifier("screen.assistant.heading")
             .toolbar {
                 ToolbarItemGroup(placement: .topBarLeading) {
                     if mode == .chat {
