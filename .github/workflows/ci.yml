@@ -77,8 +77,12 @@ jobs:
           if [ -z "${binary}" ]; then
             echo "No AIAgentPackageTests binary found"; exit 1
           fi
+          # AIAgent's own gate measures only AIAgent sources. The swift-test
+          # binary also links CoreSSH and swift-nio module artifacts; excluding
+          # them keeps their 0%-covered files (CoreSSH has its own gate) out of
+          # the denominator.
           xcrun llvm-cov report -instr-profile "${profdata}" "${binary}" \
-            -ignore-filename-regex "(Tests/|\.build/checkouts/)" \
+            -ignore-filename-regex "(Tests/|Sources/CoreSSH|\.build/)" \
             > /tmp/aia_cov.txt
           python3 - <<'PY'
           import re, sys
