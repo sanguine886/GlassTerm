@@ -366,7 +366,34 @@ public struct OpenAICompatibleAdapter: AIChatStreaming {
         }
         return .network(error.localizedDescription)
     }
+
+    /// Model discovery: lists `data[].id` from `GET /v1/models`. The base URL
+    /// may already carry `/v1`; same tolerance as `chatCompletionsURL`. Internal
+    /// so the `ModelDiscovering` conformance in ModelDiscovery.swift can call it
+    /// while still reading this file's private request fields.
+    func openAIDiscover() async throws -> DiscoveredModels {
+        let trimmed = config.baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let suffix = trimmed.hasSuffix("/v1") ? "/models" : "/v1/models"
+        guard let url = URL(string: trimmed + suffix) else {
+            return DiscoveredModels(models: [], unsupported: true)
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        let (status, data) = try await http.data(for: request)
+        guard (200 ..< 300).contains(status),
+              let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+              let list = json["data"] as? [[String: Any]]
+        else {
+            return DiscoveredModels(models: [], unsupported: true)
+        }
+        let names = list.compactMap { $0["id"] as? String }.sorted()
+        return DiscoveredModels(models: names)
+    }
 }
+
+extension OpenAICompatibleAdapter: ModelDiscovering {}
 
 /// Outcome of one adapter stream attempt.
 private enum StreamOutcome: Sendable {
