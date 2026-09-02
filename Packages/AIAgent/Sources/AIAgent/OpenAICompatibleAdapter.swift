@@ -393,8 +393,6 @@ public struct OpenAICompatibleAdapter: AIChatStreaming {
     }
 }
 
-extension OpenAICompatibleAdapter: ModelDiscovering {}
-
 /// Outcome of one adapter stream attempt.
 private enum StreamOutcome: Sendable {
     case completed
