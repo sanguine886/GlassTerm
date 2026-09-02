@@ -12,6 +12,10 @@ struct SFTPBrowserView: View {
 
     @Environment(HostManager.self) private var manager
     @State private var sftp: (any SFTPService)?
+    /// The live SSH session that owns the SFTP client. Held here so an
+    /// unexpected drop triggers the session's reconnect policy and the view can
+    /// rebuild the SFTP client on a new connection (spec §4.2 auto-reconnect).
+    @State private var session: SSHSession?
     @State private var entries: [SFTPEntry] = []
     @State private var currentPath = "/"
     @State private var isLoading = false
@@ -203,10 +207,17 @@ struct SFTPBrowserView: View {
                 let (freshSession, config) = try manager.openSession(for: record)
                 try await freshSession.connect(config: config, knownHosts: manager.knownHosts)
                 manager.markConnected(record)
+                session = freshSession
                 sftp = try await freshSession.openSFTP()
             }
             entries = try await sftp!.list(directory: currentPath)
         } catch {
+            // An operation failure (e.g. dropped connection) invalidates the
+            // SFTP handle; drop it so the next open() rebuilds on the session's
+            // reconnected transport instead of reusing a dead handle.
+            if sftp != nil, session != nil {
+                sftp = nil
+            }
             errorMessage = error.localizedDescription
         }
     }

@@ -21,6 +21,10 @@ struct TerminalScreenView: View {
     /// Session/config of the attempt awaiting a fingerprint decision.
     @State private var pendingSession: SSHSession?
     @State private var pendingConfig: SSHHostConfig?
+    /// The live SSH session backing the terminal. Held here so closing the tab
+    /// or leaving the screen actually disconnects the remote shell/PTY instead
+    /// of leaking it (spec §4.2 lifecycle).
+    @State private var session: SSHSession?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -61,6 +65,15 @@ struct TerminalScreenView: View {
             }
         }
         .task { openFirstSession() }
+        .onDisappear {
+            terminalSession?.stop()
+            terminalSession = nil
+            let stale = session
+            session = nil
+            if let stale {
+                Task { await stale.disconnect() }
+            }
+        }
         .sheet(item: $pendingFlow) { flow in
             FingerprintConfirmView(kind: flow.kind) { decision in
                 handleFingerprintDecision(decision, flow: flow)
@@ -160,6 +173,7 @@ struct TerminalScreenView: View {
         )
         terminal.onTmuxDetected = { showTmuxHint = true }
         terminalSession = terminal
+        self.session = session
         _ = tabs.add(title: record.name)
     }
 
@@ -188,12 +202,19 @@ struct TerminalScreenView: View {
         if tabs.tabs.isEmpty {
             terminalSession?.stop()
             terminalSession = nil
+            Task { await session?.disconnect() }
+            session = nil
         }
     }
 
     private func disconnectAll() {
         terminalSession?.stop()
         terminalSession = nil
+        let stale = session
+        session = nil
+        if let stale {
+            Task { await stale.disconnect() }
+        }
         tabs = SessionTabsModel()
     }
 }

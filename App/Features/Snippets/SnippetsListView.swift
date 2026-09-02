@@ -138,6 +138,9 @@ struct SnippetsListView: View {
                 manager.markConnected(record)
                 let result = try await session.run(snippet.command)
                 output = result.output
+                // One-off exec: release the connection so the remote shell
+                // channel and keepalive aren't leaked (spec §4.2 lifecycle).
+                await session.disconnect()
             } catch {
                 errorMessage = error.localizedDescription
                 runningSnippet = nil

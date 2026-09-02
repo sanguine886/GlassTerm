@@ -33,15 +33,24 @@ final class HostManager {
     /// Creates or updates a host, (re)storing its secret in the Keychain.
     func save(draft: HostDraft, existing: HostRecord?) throws -> HostRecord {
         let reference = existing?.secretRef ?? UUID().uuidString
-        try secrets.save(draft.secret, account: reference)
+        // Only write the Keychain when a new secret is provided (create or
+        // explicit re-entry). A blank secret keeps the existing stored value;
+        // otherwise editing just a hostname would wipe real credentials.
+        if !draft.secret.isEmpty || existing == nil {
+            try secrets.save(draft.secret, account: reference)
+        }
 
         var passphraseRef = existing?.passphraseRef
         if let passphrase = draft.passphrase, !passphrase.isEmpty, draft.authKind == .privateKey {
             passphraseRef = reference + ".passphrase"
             try secrets.save(passphrase, account: passphraseRef ?? "")
         } else if let old = passphraseRef {
-            try? secrets.delete(account: old)
-            passphraseRef = nil
+            // Only remove a stored passphrase when the user explicitly cleared
+            // it on a new-secret save; a blank field on edit keeps the old one.
+            if !draft.secret.isEmpty {
+                try? secrets.delete(account: old)
+                passphraseRef = nil
+            }
         }
 
         let record = existing ?? HostRecord(name: draft.name, hostname: draft.hostname, username: draft.username)
