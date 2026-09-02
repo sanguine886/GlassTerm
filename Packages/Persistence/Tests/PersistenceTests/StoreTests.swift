@@ -134,8 +134,21 @@ final class AIProviderStoreTests: XCTestCase {
     func testAllSortedByCreation() throws {
         let container = try AIProviderStore.makeContainer(inMemory: true)
         let store = AIProviderStore(container: container)
-        let older = AIProviderRecord(name: "old", kindRaw: "openAICompatible", baseURL: "https://o", model: "m", apiKeyRef: "ro", createdAt: Date(timeIntervalSinceNow: -100))
-        let newer = AIProviderRecord(name: "new", kindRaw: "gemini", baseURL: "https://n", model: "m", apiKeyRef: "rn")
+        let older = AIProviderRecord(
+            name: "old",
+            kindRaw: "openAICompatible",
+            baseURL: "https://o",
+            model: "m",
+            apiKeyRef: "ro",
+            createdAt: Date(timeIntervalSinceNow: -100)
+        )
+        let newer = AIProviderRecord(
+            name: "new",
+            kindRaw: "gemini",
+            baseURL: "https://n",
+            model: "m",
+            apiKeyRef: "rn"
+        )
         try store.add(newer)
         try store.add(older)
 
@@ -201,7 +214,15 @@ final class AuditStoreTests: XCTestCase {
     func testClearEmptiesAll() throws {
         let container = try AuditStore.makeContainer(inMemory: true)
         let store = AuditStore(container: container)
-        try store.add(AuditRecord(timestamp: Date(), toolName: "read_file", commandText: "cat x", resultSummary: "-", approver: "auto", strategyRaw: "readOnly", outcomeRaw: "autoApproved"))
+        try store.add(AuditRecord(
+            timestamp: Date(),
+            toolName: "read_file",
+            commandText: "cat x",
+            resultSummary: "-",
+            approver: "auto",
+            strategyRaw: "readOnly",
+            outcomeRaw: "autoApproved"
+        ))
         try store.clear()
         XCTAssertTrue(try store.all().isEmpty)
     }
@@ -209,8 +230,24 @@ final class AuditStoreTests: XCTestCase {
     func testAllSortedByTimestampDescending() throws {
         let container = try AuditStore.makeContainer(inMemory: true)
         let store = AuditStore(container: container)
-        let older = AuditRecord(timestamp: Date(timeIntervalSinceNow: -100), toolName: "t", commandText: "a", resultSummary: "-", approver: "u", strategyRaw: "alwaysAsk", outcomeRaw: "rejected")
-        let newer = AuditRecord(timestamp: Date(), toolName: "t", commandText: "b", resultSummary: "-", approver: "u", strategyRaw: "alwaysAsk", outcomeRaw: "rejected")
+        let older = AuditRecord(
+            timestamp: Date(timeIntervalSinceNow: -100),
+            toolName: "t",
+            commandText: "a",
+            resultSummary: "-",
+            approver: "u",
+            strategyRaw: "alwaysAsk",
+            outcomeRaw: "rejected"
+        )
+        let newer = AuditRecord(
+            timestamp: Date(),
+            toolName: "t",
+            commandText: "b",
+            resultSummary: "-",
+            approver: "u",
+            strategyRaw: "alwaysAsk",
+            outcomeRaw: "rejected"
+        )
         try store.add(older)
         try store.add(newer)
 
