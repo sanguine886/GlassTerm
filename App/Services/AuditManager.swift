@@ -18,6 +18,12 @@ final class AuditManager {
         self.auditStore = auditStore
     }
 
+    /// A Sendable `AuditLogging` sink for the agent loop that persists into the
+    /// same SwiftData store the UI reads back from.
+    func loggingSink() -> any AuditLogging {
+        AuditLoggingFactory.make(store: auditStore)
+    }
+
     func refresh() {
         entries = (try? auditStore.all()) ?? []
     }

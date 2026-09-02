@@ -8,21 +8,48 @@ struct AssistantView: View {
     @Environment(AIProviderManager.self) private var providers
     @Environment(ChatManager.self) private var chat
 
+    enum Mode: String, CaseIterable, Identifiable {
+        case chat
+        case agent
+        var id: String {
+            rawValue
+        }
+    }
+
+    @State private var mode = Mode.chat
     @State private var draft = ""
     @State private var showPreview = false
     @FocusState private var inputFocused: Bool
 
     var body: some View {
         NavigationStack {
-            content
-                .navigationTitle(Text("tab.assistant"))
-                .navigationBarTitleDisplayMode(.inline)
-                .background(Color.glassBackground.ignoresSafeArea())
-                .toolbar {
-                    ToolbarItemGroup(placement: .topBarLeading) {
+            VStack(spacing: 0) {
+                Picker("assistant.mode", selection: $mode) {
+                    Text("assistant.mode.chat").tag(Mode.chat)
+                    Text("assistant.mode.agent").tag(Mode.agent)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, GlassSpacing.md)
+                .padding(.top, GlassSpacing.xs)
+
+                ZStack {
+                    if mode == .chat {
+                        content
+                    } else {
+                        AgentView()
+                    }
+                }
+            }
+            .navigationTitle(Text("tab.assistant"))
+            .navigationBarTitleDisplayMode(.inline)
+            .background(Color.glassBackground.ignoresSafeArea())
+            .toolbar {
+                ToolbarItemGroup(placement: .topBarLeading) {
+                    if mode == .chat {
                         sessionMenu
                     }
                 }
+            }
         }
     }
 
