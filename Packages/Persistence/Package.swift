@@ -3,11 +3,16 @@ import PackageDescription
 
 let package = Package(
     name: "Persistence",
-    platforms: [.iOS("26.0")],
+    platforms: [.iOS("26.0"), .macOS(.v15)],
     products: [
         .library(name: "Persistence", targets: ["Persistence"]),
     ],
     targets: [
         .target(name: "Persistence", path: "Sources/Persistence"),
+        .testTarget(
+            name: "PersistenceTests",
+            dependencies: ["Persistence"],
+            path: "Tests/PersistenceTests"
+        ),
     ]
 )

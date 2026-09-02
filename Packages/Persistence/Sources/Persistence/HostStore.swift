@@ -9,7 +9,7 @@ public final class HostStore: @unchecked Sendable {
 
     public static func makeContainer(inMemory: Bool = false) throws -> ModelContainer {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: inMemory)
-        return try ModelContainer(for: HostRecord.self, configurations: configuration)
+        return try ModelContainer(for: HostRecord.self, SnippetRecord.self, configurations: configuration)
     }
 
     public init(container: ModelContainer) {

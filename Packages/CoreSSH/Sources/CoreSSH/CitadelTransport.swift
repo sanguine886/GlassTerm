@@ -49,6 +49,8 @@ public protocol SSHTransport: Sendable {
     func run(_ command: String) async throws -> String
     /// Requests an interactive shell (PTY, xterm-256color).
     func requestShell(cols: Int, rows: Int) async throws -> ShellStreams
+    /// Opens an SFTP subsystem channel on the current connection (spec §4.4).
+    func openSFTP() async throws -> any SFTPService
     /// Closes the connection; idempotent.
     func close() async
     /// Invoked when the connection drops unexpectedly.
@@ -141,6 +143,12 @@ public final class CitadelTransport: SSHTransport, @unchecked Sendable {
             }
         )
         return ShellStreams(output: eventStream, stdin: stdin)
+    }
+
+    public func openSFTP() async throws -> any SFTPService {
+        let client = try requireClient()
+        let sftp = try await client.openSFTP()
+        return CitadelSFTP(client: sftp)
     }
 
     public func close() async {

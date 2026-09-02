@@ -113,6 +113,14 @@ public actor SSHSession {
         return try await transport.requestShell(cols: cols, rows: rows)
     }
 
+    /// Opens an SFTP channel on the live connection (spec §4.4).
+    public func openSFTP() async throws -> any SFTPService {
+        guard let transport, case .connected = state else {
+            throw SSHError.sessionNotConnected
+        }
+        return try await transport.openSFTP()
+    }
+
     /// User-initiated close: no reconnects afterwards.
     public func disconnect() async {
         userClosed = true

@@ -5,6 +5,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      coverage_only:
+        description: "Run only AIAgent swift test + coverage gate (fast coverage iteration)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -22,6 +27,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install tooling
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: |
           set -euo pipefail
           for tool in xcodegen swiftlint swiftformat; do
@@ -31,20 +37,104 @@ jobs:
           done
 
       - name: Lint
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: |
           set -euo pipefail
           swiftformat --lint .
           swiftlint --quiet
 
       - name: Generate Xcode project
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: xcodegen generate
 
       - name: CoreSSH engine tests (swift test)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: |
           set -euo pipefail
           swift test --package-path Packages/CoreSSH --enable-code-coverage 2>&1
 
+      - name: TerminalKit logic tests (swift test)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
+        run: |
+          set -euo pipefail
+          swift test --package-path Packages/TerminalKit 2>&1
+
+      - name: AIAgent logic tests (swift test)
+        run: |
+          set -euo pipefail
+          swift test --package-path Packages/AIAgent --enable-code-coverage 2>&1
+
+      - name: Coverage gate — AIAgent ≥ 60% (ADR-0005, swift test)
+        run: |
+          set -euo pipefail
+          profdata=$(find Packages/AIAgent/.build -name "*.profdata" | head -1)
+          if [ -z "${profdata}" ]; then
+            echo "No profdata found for AIAgent"; exit 1
+          fi
+          # The test binary lives inside AIAgentPackageTests.xctest/Contents/MacOS/;
+          # exclude the sibling .dSYM DWARF file (not a coverage-able Mach-O).
+          binary=$(find Packages/AIAgent/.build -type f -name "AIAgentPackageTests" -not -path "*dSYM*" | head -1)
+          if [ -z "${binary}" ]; then
+            echo "No AIAgentPackageTests binary found"; exit 1
+          fi
+          # AIAgent's own gate measures only AIAgent sources. The swift-test
+          # binary also links CoreSSH and swift-nio module artifacts; excluding
+          # them keeps their 0%-covered files (CoreSSH has its own gate) out of
+          # the denominator.
+          xcrun llvm-cov report -instr-profile "${profdata}" "${binary}" \
+            -ignore-filename-regex "(Tests/|Sources/CoreSSH|\.build/)" \
+            > /tmp/aia_cov.txt
+          python3 - <<'PY'
+          import re, sys
+          text = open('/tmp/aia_cov.txt').read()
+          total = [l for l in text.splitlines() if l.strip().startswith('TOTAL')]
+          if not total:
+              print("report had no TOTAL line"); sys.exit(1)
+          cov = float(re.findall(r'([\d.]+)%', total[-1])[-1])
+
+          # Per-file line coverage, ascending — so under-covered files stand out.
+          print("Per-file line coverage (ascending):")
+          for l in sorted(text.splitlines(), key=lambda ln: (float(re.findall(r'([\d.]+)%', ln)[-1]) if re.findall(r'([\d.]+)%', ln) else 0.0)):
+              if l.strip() and not l.strip().startswith('---'):
+                  print(f"  {l.strip()}")
+          print(total[-1].strip())
+          print(f'AIAgent line coverage: {cov:.1f}%')
+          sys.exit(0 if cov >= 60.0 else 1)
+          PY
+
+      - name: Persistence logic tests (swift test)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
+        run: |
+          set -euo pipefail
+          swift test --package-path Packages/Persistence --enable-code-coverage 2>&1
+
+      - name: Coverage gate — Persistence ≥ 60% (ADR-0005, swift test)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
+        run: |
+          set -euo pipefail
+          profdata=$(find Packages/Persistence/.build -name "*.profdata" | head -1)
+          if [ -z "${profdata}" ]; then
+            echo "No profdata found for Persistence"; exit 1
+          fi
+          binary=$(find Packages/Persistence/.build -type f -name "PersistencePackageTests" -not -path "*dSYM*" | head -1)
+          if [ -z "${binary}" ]; then
+            echo "No PersistencePackageTests binary found"; exit 1
+          fi
+          xcrun llvm-cov report -instr-profile "${profdata}" "${binary}" \
+            -ignore-filename-regex "(Tests/|\.build/checkouts/)" \
+            > /tmp/persistence_cov.txt
+          python3 - <<'PY'
+          import re, sys
+          text = open('/tmp/persistence_cov.txt').read()
+          total = [l for l in text.splitlines() if l.strip().startswith('TOTAL')][-1]
+          cov = float(re.findall(r'([\d.]+)%', total)[-1])
+          print(total.strip())
+          print(f'Persistence line coverage: {cov:.1f}%')
+          sys.exit(0 if cov >= 60.0 else 1)
+          PY
+
       - name: Coverage gate — CoreSSH ≥ 60% (ADR-0005)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: |
           set -euo pipefail
           # swift test emits LLVM profdata (not xccov), so llvm-cov reads it.
@@ -52,7 +142,7 @@ jobs:
           if [ -z "${profdata}" ]; then
             echo "No profdata found for CoreSSH"; exit 1
           fi
-          binary=$(find Packages/CoreSSH/.build -type f -name "CoreSSHPackageTests" | head -1)
+          binary=$(find Packages/CoreSSH/.build -type f -name "CoreSSHPackageTests" -not -path "*dSYM*" | head -1)
           if [ -z "${binary}" ]; then
             echo "No CoreSSHPackageTests binary found"; exit 1
           fi
@@ -70,6 +160,7 @@ jobs:
           PY
 
       - name: Ensure iPhone 16 Pro simulator exists
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: |
           set -euo pipefail
           if ! xcrun simctl list devices available | grep -q "iPhone 16 Pro ("; then
@@ -86,52 +177,28 @@ jobs:
           fi
 
       - name: Build & Test
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: |
           set -euo pipefail
+          mkdir -p build
           xcodebuild test \
             -project GlassTerm.xcodeproj \
             -scheme GlassTerm \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
             -enableCodeCoverage YES \
             -derivedDataPath build/DerivedData \
-            2>&1 | xcbeautify --quiet
-
-      - name: Coverage gate — Persistence ≥ 60% (ADR-0005)
-        run: |
-          set -euo pipefail
-          xcresult=$(find build/DerivedData/Logs/Test -maxdepth 1 -name "*.xcresult" | head -1)
-          if [ -z "${xcresult}" ]; then
-            echo "No xcresult found for app tests"; exit 1
-          fi
-          xcrun xccov view --report --json "${xcresult}" > /tmp/app_cov.json
-          python3 - <<'PY'
-          import json, sys
-          data = json.load(open('/tmp/app_cov.json'))
-          if isinstance(data, dict):
-              targets = data.get('coverage', {}).get('targets') or data.get('targets') or []
-          else:
-              targets = data
-          print('Targets:', [(t['name'], round(t['lineCoverage'], 2)) for t in targets])
-          # SPM packages are compiled into the GlassTerm.app binary, so
-          # Persistence coverage is the sum of its sources under any target.
-          files = [f for t in targets for f in t.get('files', []) if '/Packages/Persistence/' in f.get('path', '')]
-          if not files:
-              print('No Persistence sources found in coverage report'); sys.exit(1)
-          covered = sum(f['coveredLines'] for f in files)
-          executable = sum(f['executableLines'] for f in files)
-          ratio = covered / executable if executable else 0
-          print(f"Persistence line coverage: {ratio:.1%} ({covered}/{executable})")
-          sys.exit(0 if ratio >= 0.60 else 1)
-          PY
+            -skipPackagePluginValidation \
+            2>&1 | tee build/test.log | xcbeautify \
+            || (echo "=== raw xcodebuild tail ===" && tail -80 build/test.log && exit 1)
 
       - name: Coverage report
-        if: always()
+        if: ${{ always() && !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         run: |
           set -euo pipefail
           xcrun xccov view --report build/DerivedData/Logs/Test/*.xcresult || true
 
       - name: Upload test results
-        if: always()
+        if: ${{ always() && !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
         uses: actions/upload-artifact@v4
         with:
           name: xcresult
@@ -140,6 +207,7 @@ jobs:
 
   ipa:
     name: Unsigned IPA (device build)
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.coverage_only) }}
     runs-on: macos-26
     timeout-minutes: 30
     steps:
@@ -163,6 +231,7 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -derivedDataPath build/ipa \
+            -skipPackagePluginValidation \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             2>&1 | tee build/build.log | xcbeautify --quiet || (echo "=== full build log tail ===" && tail -120 build/build.log && exit 1)

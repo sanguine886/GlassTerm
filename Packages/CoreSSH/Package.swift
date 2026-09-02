@@ -31,6 +31,7 @@ let package = Package(
             name: "CoreSSHTests",
             dependencies: [
                 "CoreSSH",
+                .product(name: "Citadel", package: "Citadel"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIO", package: "swift-nio"),
                 .product(name: "NIOSSH", package: "swift-nio-ssh"),
