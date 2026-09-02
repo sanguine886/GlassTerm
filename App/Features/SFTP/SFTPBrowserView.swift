@@ -140,11 +140,18 @@ struct SFTPBrowserView: View {
                     Text(entry.name)
                         .font(.body)
                         .lineLimit(1)
-                    if entry.kind != .directory, let size = entry.size {
-                        Text(ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file))
-                            .font(.caption)
-                            .foregroundStyle(Color.glassSecondaryText)
+                    HStack(spacing: 8) {
+                        if let size = entry.size, entry.kind != .directory {
+                            Text(ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file))
+                        } else if entry.kind == .directory {
+                            Text("sftp.permissions.folder")
+                        }
+                        if let permissions = entry.permissions {
+                            Text(Self.permissionString(permissions))
+                        }
                     }
+                    .font(.caption)
+                    .foregroundStyle(Color.glassSecondaryText)
                 }
                 Spacer()
             }
@@ -350,5 +357,17 @@ struct SFTPBrowserView: View {
         case .symlink: "link"
         case .unknown: "questionmark"
         }
+    }
+
+    /// Renders the Unix mode permission bits as `rwxrwxrwx`.
+    static func permissionString(_ mode: UInt32) -> String {
+        let masks: [(UInt32, String)] = [
+            (0o400, "r"), (0o200, "w"), (0o100, "x"),
+            (0o040, "r"), (0o020, "w"), (0o010, "x"),
+            (0o004, "r"), (0o002, "w"), (0o001, "x"),
+        ]
+        return masks.map { pair in
+            mode & pair.0 != 0 ? pair.1 : "-"
+        }.joined()
     }
 }
