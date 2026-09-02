@@ -6,7 +6,12 @@ import SwiftUI
 /// Markdown rendering and a "what will be sent" preview.
 struct AssistantView: View {
     @Environment(AIProviderManager.self) private var providers
+    @Environment(HostManager.self) private var hostManager
     @Environment(ChatManager.self) private var chat
+    /// The host the AI operates on (chat context + agent target). Defaults to
+    /// the first configured server; user selects via the toolbar (真机验收:
+    /// 对话需能读取/操作已添加服务器).
+    @State private var targetHostID: UUID?
 
     enum Mode: String, CaseIterable, Identifiable {
         case chat
@@ -50,8 +55,53 @@ struct AssistantView: View {
                         sessionMenu
                     }
                 }
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    hostMenu
+                }
             }
         }
+    }
+
+    /// Target-host picker for the AI. Lets the assistant read/operate a
+    /// configured server: the chosen host's summary feeds the system prompt so
+    /// the model knows which machine it is acting on.
+    private var hostMenu: some View {
+        Menu {
+            Button("assistant.host.none", systemImage: "link.slash") {
+                targetHostID = nil
+            }
+            ForEach(hostManager.allHosts) { host in
+                Button {
+                    targetHostID = host.id
+                } label: {
+                    Text("\(host.name) (\(host.username)@\(host.hostname))")
+                }
+            }
+        } label: {
+            Label(targetHostTitle, systemImage: "server.rack")
+        }
+    }
+
+    private var targetHostTitle: String {
+        guard let id = targetHostID,
+              let host = hostManager.allHosts.first(where: { $0.id == id })
+        else {
+            return String(localized: "assistant.host.none")
+        }
+        return host.name
+    }
+
+    /// The host context to attach to this turn (server the AI operates on).
+    private var attachedContext: AgentContext? {
+        guard let id = targetHostID,
+              let host = hostManager.allHosts.first(where: { $0.id == id })
+        else {
+            return nil
+        }
+        return AgentContext(
+            userPrompt: "",
+            host: HostSummary(alias: host.name, workingPaths: [])
+        )
     }
 
     private var sessionMenu: some View {
@@ -208,7 +258,7 @@ struct AssistantView: View {
         guard let config = providers.activeProviderConfig else { return }
         draft = ""
         Task {
-            _ = await chat.send(prompt, provider: config)
+            _ = await chat.send(prompt, provider: config, hostContext: attachedContext)
         }
     }
 }

@@ -223,8 +223,31 @@ struct TerminalScreenView: View {
 private struct TerminalViewWrapper: UIViewRepresentable {
     let session: TerminalSession
 
-    func makeUIView(context _: Context) -> TerminalView {
-        session.terminalView
+    func makeUIView(context _: Context) -> UIView {
+        // Wrap the SwiftTerm view in a container that fills the phone width.
+        // SwiftTerm computes the column count from the view width; pinning the
+        // wrapper to the SwiftUI container makes the emulator fit the screen
+        // instead of overflowing it (真机验收: 终端宽度>屏幕).
+        let wrapper = UIView()
+        wrapper.backgroundColor = .black
+        let terminal = session.terminalView
+        terminal.translatesAutoresizingMaskIntoConstraints = false
+        wrapper.addSubview(terminal)
+        NSLayoutConstraint.activate([
+            terminal.topAnchor.constraint(equalTo: wrapper.topAnchor),
+            terminal.leadingAnchor.constraint(equalTo: wrapper.leadingAnchor),
+            terminal.trailingAnchor.constraint(equalTo: wrapper.trailingAnchor),
+            terminal.bottomAnchor.constraint(equalTo: wrapper.bottomAnchor),
+        ])
+        // Let the emulator reflow to the actual width once laid out.
+        terminal.recalculateSize()
+        return wrapper
+    }
+
+    func updateUIView(_ container: UIView, context _: Context) {
+        if let terminal = container.subviews.first as? TerminalView {
+            terminal.recalculateSize()
+        }
     }
 
     func updateUIView(_: TerminalView, context _: Context) {}

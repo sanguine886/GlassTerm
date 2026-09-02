@@ -28,9 +28,7 @@ struct AgentView: View {
                             approvalCard(for: proposal)
                         }
                         agentStatus
-                        if !runner.echoLines.isEmpty {
-                            echoPanel
-                        }
+                        echoPanel
                     }
                     .padding(GlassSpacing.md)
                 }
@@ -147,11 +145,17 @@ struct AgentView: View {
             Label("agent.echo", systemImage: "terminal")
                 .font(.caption)
                 .foregroundStyle(Color.glassSecondaryText)
-            ForEach(runner.echoLines.suffix(30), id: \.self) { line in
-                Text(line)
-                    .font(.system(.caption, design: .monospaced))
-                    .foregroundStyle(Color.glassPrimaryText)
-                    .textSelection(.enabled)
+            if runner.echoLines.isEmpty {
+                Text("agent.echo.empty")
+                    .font(.caption)
+                    .foregroundStyle(Color.glassSecondaryText)
+            } else {
+                ForEach(runner.echoLines.suffix(30), id: \.self) { line in
+                    Text(line)
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(Color.glassPrimaryText)
+                        .textSelection(.enabled)
+                }
             }
         }
         .padding(GlassSpacing.md)
@@ -188,9 +192,10 @@ struct AgentView: View {
             errorMessage = String(localized: "agent.noProvider")
             return
         }
-        guard let hostID = selectedHostID,
-              let host = hostManager.allHosts.first(where: { $0.id == hostID })
-        else {
+        // Default the target to the first configured server when none is explicitly
+        // picked, so starting an agent run always has a reachable host.
+        let hostID = selectedHostID ?? hostManager.allHosts.first?.id
+        guard let host = hostManager.allHosts.first(where: { $0.id == hostID }) else {
             errorMessage = String(localized: "agent.noHost")
             return
         }

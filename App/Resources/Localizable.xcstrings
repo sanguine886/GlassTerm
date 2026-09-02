@@ -2848,6 +2848,38 @@
           }
         }
       }
+    },
+    "assistant.host.none": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No host"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未选择主机"
+          }
+        }
+      }
+    },
+    "agent.echo.empty": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No activity yet — approval echoes and agent output appear here."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂无记录——审批回显与 Agent 输出将显示在此。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
