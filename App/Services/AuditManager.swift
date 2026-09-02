@@ -57,7 +57,8 @@ final class AuditManager {
     func exportText() -> String {
         entries.map { entry in
             let time = Self.dateFormatter.string(from: entry.timestamp)
-            return "\(time)\t[\(entry.outcomeRaw)]\t\(entry.approver)\t\(entry.strategyRaw)\t\(entry.toolName): \(entry.commandText) → \(entry.resultSummary)"
+            return "\(time)\t[\(entry.outcomeRaw)]\t\(entry.approver)\t\(entry.strategyRaw)"
+                + "\t\(entry.toolName): \(entry.commandText) → \(entry.resultSummary)"
         }.joined(separator: "\n")
     }
 

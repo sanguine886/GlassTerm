@@ -102,7 +102,8 @@ struct AgentView: View {
                 proposal: ApprovalCard.Proposal(
                     titleKey: LocalizedStringKey("agent.proposal"),
                     command: proposal.commandText ?? proposal.toolName,
-                    impactSummaryKey: proposal.explanation.map { LocalizedStringKey($0) } ?? LocalizedStringKey("agent.proposal"),
+                    impactSummaryKey: proposal.explanation.map { LocalizedStringKey($0) }
+                        ?? LocalizedStringKey("agent.proposal"),
                     isDangerous: proposal.classification.verdict != .safe
                 ),
                 onApprove: {
