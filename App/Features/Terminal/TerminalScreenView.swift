@@ -30,6 +30,7 @@ struct TerminalScreenView: View {
         VStack(spacing: 0) {
             if let terminalSession {
                 TerminalViewWrapper(session: terminalSession)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .ignoresSafeArea(.keyboard)
             } else {
                 openingState
