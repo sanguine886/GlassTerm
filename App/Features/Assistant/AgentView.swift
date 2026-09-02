@@ -77,8 +77,8 @@ struct AgentView: View {
             .pickerStyle(.menu)
 
             Picker("agent.strategy", selection: $strategy) {
-                ForEach([ApprovalStrategy.alwaysAsk, .autoReview, .readOnly], id: \.self) { s in
-                    Text(strategyName(s)).tag(s)
+                ForEach([ApprovalStrategy.alwaysAsk, .autoReview, .readOnly], id: \.self) { strategy in
+                    Text(strategyName(strategy)).tag(strategy)
                 }
             }
             .pickerStyle(.segmented)
@@ -100,9 +100,9 @@ struct AgentView: View {
         VStack(alignment: .leading, spacing: GlassSpacing.md) {
             ApprovalCard(
                 proposal: ApprovalCard.Proposal(
-                    titleKey: proposal.toolName,
+                    titleKey: LocalizedStringKey("agent.proposal"),
                     command: proposal.commandText ?? proposal.toolName,
-                    impactSummaryKey: proposal.explanation.map { LocalizedStringKey($0) } ?? "agent.proposal",
+                    impactSummaryKey: proposal.explanation.map { LocalizedStringKey($0) } ?? LocalizedStringKey("agent.proposal"),
                     isDangerous: proposal.classification.verdict != .safe
                 ),
                 onApprove: {

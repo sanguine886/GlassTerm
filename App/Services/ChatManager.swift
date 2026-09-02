@@ -187,8 +187,8 @@ final class ChatManager {
 
     static func text(of body: ChatTurn.Body) -> String {
         switch body {
-        case let .text(t): t
-        case let .toolCall(j): j
+        case let .text(text): text
+        case let .toolCall(json): json
         }
     }
 }

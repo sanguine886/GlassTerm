@@ -1,5 +1,6 @@
 import Persistence
 import SwiftUI
+import UIKit
 
 /// Audit trail viewer (spec §4.6 / §6.3.3): lists persisted records, offers
 /// export to a share sheet and a clear-all action.
@@ -25,7 +26,7 @@ struct AuditView: View {
                             }
                             Text(entry.commandText)
                                 .font(.system(.caption, design: .monospaced))
-                            Text("\(entry.approver) · \(entry.strategyRaw) · \(Self.timeFormatter.string(from: entry.timestamp))")
+                            Text("\(entry.approver) · \(entry.strategyRaw) · \(time(entry.timestamp))")
                                 .font(.caption2)
                                 .foregroundStyle(Color.glassSecondaryText)
                         }
@@ -64,6 +65,10 @@ struct AuditView: View {
         {
             root.present(controller, animated: true)
         }
+    }
+
+    private func time(_ date: Date) -> String {
+        Self.timeFormatter.string(from: date)
     }
 
     private func outcomeLabel(_ raw: String) -> String {

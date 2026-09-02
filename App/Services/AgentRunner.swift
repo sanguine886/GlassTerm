@@ -163,7 +163,8 @@ private struct SSHCommandExecutor: AgentToolExecutor, Sendable {
             let result = try await session.run(command)
             return ToolResult(toolCallID: invocation.toolCallID, text: result.output, status: .success, truncated: false)
         } catch {
-            return ToolResult(toolCallID: invocation.toolCallID, text: error.localizedDescription, status: .failure(error.localizedDescription), truncated: false)
+            let message = error.localizedDescription
+            return ToolResult(toolCallID: invocation.toolCallID, text: message, status: .failure(message), truncated: false)
         }
     }
 }
