@@ -18,6 +18,7 @@ struct SettingsView: View {
             ScrollView {
                 VStack(spacing: GlassSpacing.md) {
                     terminalSection
+                    ProvidersSettingsSection()
                 }
                 .padding(GlassSpacing.lg)
             }

@@ -110,6 +110,41 @@ final class AIProviderManager {
         return (config, record)
     }
 
+    /// Non-throwing convenience: the fully resolved active config, or nil when
+    /// none is configured / key is missing. Views use this to gate chat UI.
+    var activeProviderConfig: AIProviderConfig? {
+        (try? activeConfig())?.0
+    }
+
+    // MARK: - Model discovery (spec §4.5)
+
+    /// Fetches the provider's model catalogue when its protocol supports it.
+    /// Returns nil when unsupported; a non-nil array otherwise.
+    func discoverModels(id: UUID) async -> [String]? {
+        guard let record = (try? providerStore.record(id: id)) ?? nil,
+              let apiKey = try? secrets.load(account: record.apiKeyRef)
+        else {
+            return nil
+        }
+        let config = AIProviderConfig(
+            name: record.name,
+            kind: AIProviderKind(rawValue: record.kindRaw) ?? .openAICompatible,
+            baseURL: record.baseURL,
+            model: record.model,
+            temperature: record.temperature,
+            apiKeyRef: record.apiKeyRef
+        )
+        guard let discoverable = AIProviderAdapterFactory.discoverableAdapter(
+            kind: config.kind,
+            config: config,
+            apiKey: apiKey
+        ) else {
+            return nil
+        }
+        let result = await (try? discoverable.discoverModels()) ?? DiscoveredModels(models: [])
+        return result.unsupported ? nil : result.models
+    }
+
     // MARK: - Connection test (spec §4.5: 1-token request)
 
     /// Sends a minimal request to verify credentials + connectivity. Returns
