@@ -115,7 +115,9 @@ final class AgentRunner {
         } catch {
             isRunning = false
             phaseLabel = "agent.failed"
-            return error.localizedDescription
+            let message = error.localizedDescription
+            echoLines.append("⚠️ " + message)
+            return message
         }
     }
 

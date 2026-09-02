@@ -58,7 +58,9 @@ struct ServersView: View {
                 }
                 .navigationDestination(for: UUID.self) { hostID in
                     if let record = manager.record(id: hostID) {
-                        TerminalScreenView(record: record)
+                        // Tab1 点击服务器 → 服务器详情（状态指标 + 折线图）。
+                        // CLI 终端已移入 Tab2（终端）。
+                        ServerDetailView(record: record)
                     }
                 }
                 .sheet(isPresented: $showAdd) {
