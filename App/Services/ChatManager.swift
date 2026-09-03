@@ -86,16 +86,81 @@ final class ChatManager {
     // MARK: - Sending
 
     /// Streams a user prompt through the active provider, appending turns, and
-    /// persists the transcript. Returns true on completion.
+    /// persists the transcript. Agent-assisted mode: when `hostContext` is set
+    /// (a server is selected), the prompt routes through `AgentLoop` so the
+    /// model can propose tools that execute on the server, then the result
+    /// comes back into the conversation (真机需求: AI 助手自动操控服务器).
     func send(
         _ prompt: String,
         provider: AIProviderConfig,
-        hostContext: AgentContext? = nil
+        hostContext: AgentContext? = nil,
+        agentRunner: AgentRunner? = nil
+    ) async -> Bool {
+        if let runner = agentRunner, hostContext != nil {
+            return await runAgent(prompt, provider: provider, hostContext: hostContext, runner: runner)
+        }
+        return await sendChatOnly(prompt, provider: provider, hostContext: hostContext)
+    }
+
+    /// Appends an agent's final answer into the active transcript (used by the
+    /// shared AgentRunner callback after a tool round completes).
+    func appendAgentText(_ text: String) {
+        guard !text.isEmpty, let sessionID = activeSessionID else { return }
+        let snapshot = [ChatTurn(role: .assistant, body: .text(text))]
+        turns.append(contentsOf: snapshot)
+        persist(sessionID: sessionID, appending: snapshot)
+    }
+
+    /// Routes one prompt through the agent loop against the selected server. The
+    /// model's text/final answer lands in the transcript; tool proposals surface
+    /// as approval cards on the view (via runner.pendingProposal).
+    private func runAgent(
+        _ prompt: String,
+        provider: AIProviderConfig,
+        hostContext _: AgentContext?,
+        runner: AgentRunner
+    ) async -> Bool {
+        turns.append(ChatTurn(role: .user, body: .text(prompt)))
+        guard let sessionID = activeSessionID else { return false }
+        isStreaming = true
+        defer { isStreaming = false }
+
+        guard let hostRecord = runner.hostRecord, let hostManager = runner.hostManager else {
+            lastError = String(localized: "agent.noHost")
+            return false
+        }
+        let message = await runner.start(
+            hostRecord: hostRecord,
+            provider: provider,
+            hostManager: hostManager,
+            prompt: prompt
+        )
+        if let message {
+            lastError = message
+            let snapshot = turns.filter { $0.role == .user } + [ChatTurn(role: .assistant, body: .text("⚠️ \(message)"))]
+            persist(sessionID: sessionID, appending: snapshot)
+            return false
+        }
+        // A tool proposal opened a pending approval card; the final answer is
+        // patched when the runner reaches `.finished` (view drives proceed).
+        if let final = runner.lastAgentText {
+            let snapshot = [ChatTurn(role: .assistant, body: .text(final))]
+            turns.append(contentsOf: snapshot)
+            persist(sessionID: sessionID, appending: snapshot)
+        }
+        return true
+    }
+
+    /// Plain-text streaming chat (no tools) — used when no server is selected.
+    private func sendChatOnly(
+        _ prompt: String,
+        provider: AIProviderConfig,
+        hostContext: AgentContext?
     ) async -> Bool {
         guard !isStreaming else { return false }
         guard let sessionID = activeSessionID else {
             newSession()
-            return await send(prompt, provider: provider, hostContext: hostContext)
+            return await sendChatOnly(prompt, provider: provider, hostContext: hostContext)
         }
 
         isStreaming = true

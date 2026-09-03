@@ -25,6 +25,9 @@ struct AssistantView: View {
     @State private var draft = ""
     @State private var showPreview = false
     @FocusState private var inputFocused: Bool
+    /// Agent engine shared by chat (when a host is selected) and the agent tab.
+    @State private var agentRunner = AgentRunner()
+    @State private var agentEditedCommand = ""
 
     var body: some View {
         NavigationStack {
@@ -49,6 +52,13 @@ struct AssistantView: View {
             .navigationBarTitleDisplayMode(.inline)
             .background(Color.glassBackground.ignoresSafeArea())
             .accessibilityIdentifier("screen.assistant.heading")
+            .task {
+                agentRunner.onAgentAnswer = { [chat] text in
+                    Task { @MainActor in
+                        chat.appendAgentText(text)
+                    }
+                }
+            }
             .toolbar {
                 ToolbarItemGroup(placement: .topBarLeading) {
                     if mode == .chat {
@@ -158,6 +168,27 @@ struct AssistantView: View {
                     ForEach(chat.turns) { turn in
                         TurnBubble(turn: turn)
                     }
+                    if let proposal = agentRunner.pendingProposal {
+                        ApprovalCard(
+                            proposal: ApprovalCard.Proposal(
+                                titleKey: LocalizedStringKey("agent.proposal"),
+                                command: proposal.commandText ?? proposal.toolName,
+                                impactSummaryKey: proposal.explanation.map { LocalizedStringKey($0) }
+                                    ?? LocalizedStringKey("agent.proposal"),
+                                isDangerous: proposal.classification.verdict != .safe
+                            ),
+                            onApprove: {
+                                agentEditedCommand = ""
+                                Task { _ = await agentRunner.proceed(approve: true, editedCommand: agentEditedCommand) }
+                            },
+                            onReject: {
+                                Task { _ = await agentRunner.proceed(approve: false, editedCommand: nil) }
+                            }
+                        )
+                        TextField("agent.editCommand", text: $agentEditedCommand)
+                            .font(.system(.caption, design: .monospaced))
+                            .textFieldStyle(.roundedBorder)
+                    }
                     if chat.isStreaming {
                         HStack {
                             ProgressView().controlSize(.small)
@@ -258,7 +289,12 @@ struct AssistantView: View {
         guard let config = providers.activeProviderConfig else { return }
         draft = ""
         Task {
-            _ = await chat.send(prompt, provider: config, hostContext: attachedContext)
+            _ = await chat.send(
+                prompt,
+                provider: config,
+                hostContext: attachedContext,
+                agentRunner: attachedContext == nil ? nil : agentRunner
+            )
         }
     }
 }
