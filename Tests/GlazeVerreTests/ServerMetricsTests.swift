@@ -32,7 +32,11 @@ final class ServerMetricsTests: XCTestCase {
     }
 
     func testBytesAfterMemLine() {
-        let free = "              total        used        free      shared  buff/cache   available\nMem:   1024000000    300000000   724000000      10000     100000000   700000000\n"
+        let free = """
+                  total        used        free      shared  buff/cache   available
+        Mem:   1024000000    300000000   724000000      10000     100000000   700000000
+
+        """
         XCTAssertEqual(ServerMetricSampler.bytesAfter("Mem:", index: 0, in: free), 1_024_000_000)
         XCTAssertEqual(ServerMetricSampler.bytesAfter("Mem:", index: 1, in: free), 300_000_000)
     }

@@ -243,8 +243,11 @@ private struct TerminalViewWrapper: UIViewRepresentable {
 }
 
 /// Host UIView that owns a SwiftTerm terminal and re-sizes it to fit its own
-/// bounds. `layoutSubviews` runs on every size change (rotation, split, launch),
-/// so the terminal always matches the phone's width.
+/// bounds. `layoutSubviews` runs on every size change (rotation, split, launch).
+///
+/// SwiftTerm's own `TerminalView.layoutSubviews` re-flows the emulator to the
+/// view width (column count = width / cell width), so the host only needs to pin
+/// the terminal to its bounds and force a layout pass on size changes.
 private final class TerminalHostView: UIView {
     private var terminalView: TerminalView?
 
@@ -267,18 +270,9 @@ private final class TerminalHostView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        guard let terminal = terminalView else { return }
-        let width = bounds.width
-        let height = bounds.height
-        guard width > 0, height > 0 else { return }
-
-        // Compute how many fixed-width cells fit the host.
-        let cellWidth = terminal.cellSize.width
-        let cellHeight = terminal.cellSize.height
-        let cols = max(Int(width / cellWidth), 1)
-        let rows = max(Int(height / cellHeight), 1)
-        if let terminalState = terminal.terminal, terminalState.cols != cols || terminalState.rows != rows {
-            terminalState.resize(cols: cols, rows: rows, pixelWidth: Int(width), pixelHeight: Int(height))
-        }
+        // The pinned terminal fills our bounds; force its own layout so
+        // SwiftTerm recalculates columns to the phone width. No manual resize
+        // needed — internal cell metrics aren't public API.
+        terminalView?.setNeedsLayout()
     }
 }
