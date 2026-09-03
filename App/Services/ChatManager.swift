@@ -117,7 +117,7 @@ final class ChatManager {
     private func runAgent(
         _ prompt: String,
         provider: AIProviderConfig,
-        hostContext _: AgentContext,
+        hostContext _: AgentContext?,
         runner: AgentRunner
     ) async -> Bool {
         turns.append(ChatTurn(role: .user, body: .text(prompt)))
@@ -125,14 +125,14 @@ final class ChatManager {
         isStreaming = true
         defer { isStreaming = false }
 
-        guard let hostRecord = runner.hostRecord else {
+        guard let hostRecord = runner.hostRecord, let hostManager = runner.hostManager else {
             lastError = String(localized: "agent.noHost")
             return false
         }
         let message = await runner.start(
             hostRecord: hostRecord,
             provider: provider,
-            hostManager: runner.hostManager,
+            hostManager: hostManager,
             prompt: prompt
         )
         if let message {
