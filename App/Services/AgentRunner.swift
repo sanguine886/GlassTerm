@@ -29,6 +29,18 @@ final class AgentRunner {
     /// The live AgentLoop once connected, or nil.
     private(set) var loop: AgentLoop?
 
+    /// The final assistant text of the most recent run (used by the chat
+    /// transcript to show the agent's answer).
+    private(set) var lastAgentText: String?
+
+    /// Fired when a run completes with a final assistant answer, so a chat
+    /// transcript can patch the agent's text in after approval.
+    var onAgentAnswer: ((String) -> Void)?
+
+    /// The host this runner is bound to, exposed so chat can reuse the session.
+    private(set) var hostRecord: HostRecord?
+    private(set) var hostManager: HostManager?
+
     /// Optional Sendable audit sink bound from the view.
     private var auditSink: (any AuditLogging)?
 
@@ -49,6 +61,8 @@ final class AgentRunner {
         strategy: ApprovalStrategy = .alwaysAsk
     ) async -> String? {
         guard !isRunning else { return String(localized: "agent.alreadyRunning") }
+        self.hostRecord = hostRecord
+        self.hostManager = hostManager
 
         // Build the real host session.
         var session: SSHSession
@@ -160,9 +174,11 @@ final class AgentRunner {
             pendingProposal = proposal
             phaseLabel = proposal.classification.verdict == .safe ? "agent.awaitingApproval" : "agent.dangerous"
         } else if let text = turn.text {
+            lastAgentText = text
             echoLines.append("— " + text)
             phaseLabel = "agent.finished"
             isRunning = false
+            onAgentAnswer?(text)
         }
     }
 
