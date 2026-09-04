@@ -273,7 +273,7 @@ private final class TerminalHostView: UIView {
         addSubview(terminal)
         installGestures(on: terminal)
         setNeedsLayout()
-        terminal.becomeFirstResponder()
+        _ = terminal.becomeFirstResponder()
     }
 
     override func layoutSubviews() {
@@ -286,7 +286,7 @@ private final class TerminalHostView: UIView {
     override func didMoveToWindow() {
         super.didMoveToWindow()
         if window != nil {
-            terminalView?.becomeFirstResponder()
+            _ = terminalView?.becomeFirstResponder()
         }
     }
 
@@ -302,7 +302,7 @@ private final class TerminalHostView: UIView {
     /// Raises the keyboard for the terminal — without a first responder nothing
     /// typed reaches the shell (真机验收: 键盘无法输入到 CLI).
     @objc private func handleFocusTap() {
-        terminalView?.becomeFirstResponder()
+        _ = terminalView?.becomeFirstResponder()
     }
 
     /// Pinch to change the font size (the terminal reflows, so this is how you
